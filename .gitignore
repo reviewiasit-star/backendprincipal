@@ -1,0 +1,27 @@
+node_modules/
+
+# Entorno local
+.env
+.env.local
+.env.*.local
+microservices/academia/secrets.local.js
+
+# Logs y temporales
+logs/
+*.log
+tmp/
+temp/
+
+# Sesiones/cache de WhatsApp Web
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Archivos generados por el sistema
+pdfs/
+microservices/academia/comprobantes_firmados/
+middleware/capturas/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini

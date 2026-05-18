@@ -1,0 +1,962 @@
+[
+  {
+    "timestamp": "2025-12-29T14:20:59.111Z",
+    "pregunta": "hola",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 1714,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:27:00.981Z",
+    "pregunta": "hola",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2392,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:30:57.381Z",
+    "pregunta": "hola",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 4395,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:33:47.920Z",
+    "pregunta": "hola",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 1902,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:34:15.563Z",
+    "pregunta": "quiero inscribir a mi hijo de 3 años cuales son los requisitos",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2795,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:34:48.794Z",
+    "pregunta": "y para mi hijo de 5 que requisitos son para la inscripcion",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 3448,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:35:14.150Z",
+    "pregunta": "si cuales son los requisitos",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 4037,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:35:33.639Z",
+    "pregunta": "me podria dar la informacion que se requiere",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 3456,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:35:44.530Z",
+    "pregunta": "cuales serian",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2191,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:38:16.729Z",
+    "pregunta": "hay un estudiante llamado mariana?",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 2634,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:39:00.468Z",
+    "pregunta": "puedes decirme si pago todas las mensualides cuales pago y cuales le falta a la estudiante  Mariana Rodríguez Pérez",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2906,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:43:08.576Z",
+    "pregunta": "puedes decirme si pago todas las mensualides cuales pago y cuales le falta a la estudiante  Mariana Rodríguez Pérez",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2652,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:43:30.809Z",
+    "pregunta": "cuantos estudiantes se han inscripto este año",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 2710,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:43:42.598Z",
+    "pregunta": "puedes decirme quienes son?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2633,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T14:44:21.511Z",
+    "pregunta": "dime quienes son los estudiantes inscriptos nombre y apellido y en que nivel estan",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 2385,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2025-12-29T22:14:07.233Z",
+    "pregunta": "hola puedes buscar a una estudiante llamada mariana y ver si tiene deuda de los meses abril hasta noviembre",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 5688,
+    "usuario_id": null
+  },
+  {
+    "timestamp": "2026-01-01T16:10:06.179Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:10:28.698Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:11:15.306Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:12:20.939Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:14:23.870Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:48:00.742Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:48:36.720Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:51:05.176Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:52:39.021Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:54:47.122Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:57:08.188Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:57:36.469Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T16:57:52.864Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T17:00:03.515Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T17:03:33.549Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T17:07:16.443Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-01T17:07:42.810Z",
+    "pregunta": "hola puedes avisar a todos los padres o tutores que mañana no habra clases ni atencion en la unidad",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-08T15:48:11.443Z",
+    "pregunta": "hola puedes avisar a todos los padres que mañana no hay clases por la limpieza",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-18T00:07:43.503Z",
+    "pregunta": "¿Cuándo inician las clases?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 7689,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-18T00:09:17.587Z",
+    "pregunta": "¿Cuándo inician las clases?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 8194,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-19T17:00:52.497Z",
+    "pregunta": "puedes avisar a todos los inscriptos que las clases iniciaran el 27 de enero",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-19T17:01:21.047Z",
+    "pregunta": "puedes avisar a todos los inscriptos que las clases iniciaran el 27 de enero",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-19T17:02:02.221Z",
+    "pregunta": "avisa a todos los inscriptos que mañana no hay atencion en la academia",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:14:38.807Z",
+    "pregunta": "Envía un mensaje a todos los padres que mañana no hay clases a los de pirmer nivel",
+    "herramienta": "envio_masivo",
+    "clasificacion": "envio_masivo",
+    "tiempo_respuesta_ms": 24,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:15:00.538Z",
+    "pregunta": "Envía un mensaje a todos los padres que mañana no hay clases a los de pirmer nivel",
+    "herramienta": "envio_masivo",
+    "clasificacion": "envio_masivo",
+    "tiempo_respuesta_ms": 29,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:16:07.323Z",
+    "pregunta": "hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:16:31.028Z",
+    "pregunta": "hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:16:31.194Z",
+    "pregunta": "hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:31:37.568Z",
+    "pregunta": "Hola avisa todos los padres que mañana no hay clases solo para los de primer nivel",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:32:30.774Z",
+    "pregunta": "Hola avisa todos los padres que mañana no hay clases solo para los de primer nivel",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:32:31.012Z",
+    "pregunta": "Hola avisa todos los padres que mañana no hay clases solo para los de primer nivel",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:38:08.557Z",
+    "pregunta": "hola avisa que mañana viernes y sabados hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:38:30.269Z",
+    "pregunta": "hola avisa que mañana viernes y sabados hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:38:30.492Z",
+    "pregunta": "hola avisa que mañana viernes y sabados hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:39:18.624Z",
+    "pregunta": "hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:40:31.222Z",
+    "pregunta": "hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:40:31.407Z",
+    "pregunta": "hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:43:57.113Z",
+    "pregunta": "avisa que mañana no hay clases a los de primer nivel",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:44:40.916Z",
+    "pregunta": "avisa que mañana no hay clases a los de primer nivel",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T15:44:41.096Z",
+    "pregunta": "avisa que mañana no hay clases a los de primer nivel",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T16:54:18.107Z",
+    "pregunta": "avisa a todos que mañana no hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T16:59:01.480Z",
+    "pregunta": "hola podes avisar que mañana no hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:00:07.229Z",
+    "pregunta": "hola puedes avisar que mañana no hay clases a tods",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:04:41.455Z",
+    "pregunta": "hola puedes avisar que mañana no hay clases a tods",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:25:08.474Z",
+    "pregunta": "avisa a todos que mañana empieza las inscripcion",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:29:17.384Z",
+    "pregunta": "avisa a todos que mañana empieza las inscripcion",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:29:51.177Z",
+    "pregunta": "avisa a todos que mañana empieza las inscripcion",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:30:47.904Z",
+    "pregunta": "avisa que mañana no hay atencion en la academia",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:31:19.178Z",
+    "pregunta": "avisa que mañana no hay atencion en la academia",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:38:22.227Z",
+    "pregunta": "avisa que mañana empiezan las inscripciones a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:38:28.090Z",
+    "pregunta": "avisa que mañana empiezan las inscripciones a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:40:06.096Z",
+    "pregunta": "avisa que mañana la unidad educativa celebra el feriado no habra clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:40:10.976Z",
+    "pregunta": "avisa que mañana la unidad educativa celebra el feriado no habra clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-23T17:57:04.882Z",
+    "pregunta": "avisa que mañana hay atencion en cajas",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-26T15:19:09.716Z",
+    "pregunta": "HOLA AVISA A TODOS QUE MAÑANA NO HAY CLASES",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-27T15:50:15.091Z",
+    "pregunta": "Muéstrame todos los estudiantes con pagos pendientes en la gestión 2026.",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 12,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-27T15:50:46.801Z",
+    "pregunta": "Muéstrame todos los estudiantes con pagos pendientes en la gestión 2026.",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 1,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-27T15:55:56.527Z",
+    "pregunta": "Muéstrame todos los estudiantes con pagos pendientes en la gestión 2026.",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 3405,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-27T20:25:30.658Z",
+    "pregunta": "Hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-27T20:25:35.670Z",
+    "pregunta": "Hola avisa que mañana no hay clases a todos",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T19:31:00.543Z",
+    "pregunta": "hola",
+    "herramienta": "ayuda",
+    "clasificacion": "ayuda",
+    "tiempo_respuesta_ms": 17,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T19:50:42.616Z",
+    "pregunta": "hola tienes informacion sobre los reglamentos",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 4997,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T19:50:42.621Z",
+    "pregunta": "hola tienes informacion sobre los reglamentos",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 1,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T20:11:09.579Z",
+    "pregunta": "hola",
+    "herramienta": "ayuda",
+    "clasificacion": "ayuda",
+    "tiempo_respuesta_ms": 29,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T20:11:09.609Z",
+    "pregunta": "hola",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 3,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T20:13:58.926Z",
+    "pregunta": "hola cuando inician las clases",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 1928,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T20:13:59.023Z",
+    "pregunta": "hola cuando inician las clases",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 1915,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T20:39:02.647Z",
+    "pregunta": "avisa a todos que mañana no hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T20:39:03.097Z",
+    "pregunta": "avisa a todos que mañana no hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-28T20:48:06.037Z",
+    "pregunta": "hola",
+    "herramienta": "ayuda",
+    "clasificacion": "ayuda",
+    "tiempo_respuesta_ms": 12,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-29T00:06:11.540Z",
+    "pregunta": "avisa a todos que mañana no hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-01-29T00:06:12.049Z",
+    "pregunta": "avisa a todos que mañana no hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-02T12:23:15.961Z",
+    "pregunta": "hola",
+    "herramienta": "ayuda",
+    "clasificacion": "ayuda",
+    "tiempo_respuesta_ms": 15,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-02T12:23:16.398Z",
+    "pregunta": "hola",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 2,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-03T13:43:42.594Z",
+    "pregunta": "Tienes informacion del reglamento",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 4280,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-03T13:44:13.373Z",
+    "pregunta": "cual es el primer articulo del reglamento",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2998,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-03T13:47:15.378Z",
+    "pregunta": "Cuál es el primer artículo del reglamento?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2214,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-03T13:47:35.962Z",
+    "pregunta": "Cuál es el segundo artículo del reglamento?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 3162,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-03T13:55:18.224Z",
+    "pregunta": "que artículos aplican a los padres?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 10770,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-03T13:56:47.187Z",
+    "pregunta": "que artículos aplican a los padres?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 94842,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-03T14:00:28.927Z",
+    "pregunta": "cuales son los requisitos para la inscripcion",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 20527,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-04T21:14:56.259Z",
+    "pregunta": "que articulos del reglamento aplican a los estudiantes",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 11136,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-09T13:59:26.326Z",
+    "pregunta": "avisa a todos que mañana no hay clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-09T14:00:31.837Z",
+    "pregunta": "comunica a toda la unidad academica que mañana se suspende las clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-09T20:07:59.350Z",
+    "pregunta": "hola",
+    "herramienta": "ayuda",
+    "clasificacion": "ayuda",
+    "tiempo_respuesta_ms": 14,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-10T22:59:43.769Z",
+    "pregunta": "cuantos inscritos hay en este año",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 2102,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-10T23:00:06.986Z",
+    "pregunta": "que articulos aplican a los estudiantes",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 7599,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-11T13:36:03.594Z",
+    "pregunta": "que tipos de comida puede vender el portero",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 3011,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-11T13:37:54.874Z",
+    "pregunta": "cuanto seria la tercer mensualidad del tercer hijo si tengo 3 hijos  inscriptos",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 4115,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:33:48.790Z",
+    "pregunta": "¿Qué becas existen en el sistema?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 12802,
+    "usuario_id": 4
+  },
+  {
+    "timestamp": "2026-02-24T16:38:50.614Z",
+    "pregunta": "¿Qué becas existen en el sistema?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 6929,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:38:51.940Z",
+    "pregunta": "¿Cuántos estudiantes activos hay registrados?",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 1260,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:38:53.120Z",
+    "pregunta": "Dame un resumen de niveles y cursos disponibles.",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 1150,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:41:06.600Z",
+    "pregunta": "¿Qué becas existen en el sistema?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 6681,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:41:07.761Z",
+    "pregunta": "¿Cuántos estudiantes activos hay registrados?",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 1134,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:41:08.837Z",
+    "pregunta": "Dame un resumen de niveles y cursos disponibles.",
+    "herramienta": "base_datos",
+    "clasificacion": "base_datos",
+    "tiempo_respuesta_ms": 1045,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:41:10.868Z",
+    "pregunta": "¿Qué becas existen en el sistema?",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 2,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:41:10.897Z",
+    "pregunta": "¿Cuántos estudiantes activos hay registrados?",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 2,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-24T16:41:10.923Z",
+    "pregunta": "Dame un resumen de niveles y cursos disponibles.",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 2,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-26T13:07:43.553Z",
+    "pregunta": "puedes generar un pdf de los estudiantes inscriptos del primer nivel para marcar asistencia",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 3984,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-02-26T13:54:51.500Z",
+    "pregunta": "puedes generar un pdf de los estudiantes inscriptos del primer nivel para marcar asistencia",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 2709,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-04-18T20:00:40.001Z",
+    "pregunta": "Comunica a toda la unidad educativa que mañana es feriado nacional y no habrá clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-04-18T20:15:11.104Z",
+    "pregunta": "Comunica a las familias del primer nivel de turno mañana que mañana deben asistir con uniforme deportivo por jornada olímpica",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-05T20:02:45.632Z",
+    "pregunta": "Comunica a toda la unidad educativa que mañana es feriado y no habrá clases.",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  }
+]

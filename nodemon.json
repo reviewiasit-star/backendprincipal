@@ -1,0 +1,18 @@
+{
+    "verbose": false,
+    "quiet": true,
+    "ignore": [
+        ".wwebjs_auth/**",
+        ".wwebjs_cache/**",
+        "**/logs_consultas.json",
+        "**/msmcomprobantes/**",
+        "**/pdfs/**",
+    "**/temp/**",
+    "**/middleware/capturas/**",
+    "*.log",
+        "**/walkthrough.md",
+        "**/task.md"
+    ],
+    "ext": "js,mjs,cjs,json",
+    "delay": "2500"
+}
