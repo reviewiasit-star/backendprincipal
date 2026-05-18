@@ -6016,55 +6016,98 @@ function detectarAclaracionInscripcion(pregunta, historialConversacion = []) {
     return null;
 
   // ¿El bot preguntó recientemente "nuevo o regular"?
-  const ultimos = historialConversacion.slice(-12);
+  const ultimos = historialConversacion.slice(-16); // Ampliar ventana de búsqueda
   const idxUltimaPreguntaBot = (() => {
     for (let i = ultimos.length - 1; i >= 0; i--) {
       const m = ultimos[i];
-      if (!m || m.rol !== "asistente") continue;
-      const t = normalizarTextoComparacion(m.mensaje);
-      const preguntaTipoEstudianteClasica =
-        t.includes("es estudiante nuevo o regular") ||
-        (t.includes("nuevo") &&
-          t.includes("regular") &&
-          t.includes("es estudiante")) ||
-        (t.includes("nuevo") &&
-          t.includes("regular") &&
-          t.includes("es") &&
-          t.includes("estudiante"));
+      if (!m) continue;
+      // Buscar en mensajes del asistente
+      const esAsistente =
+        m.rol === "asistente" || m.rol === "bot" || m.autor === "assistant";
+      if (!esAsistente) continue;
+      const textoMsg = m.mensaje || m.texto || m.respuesta || "";
+      const t = normalizarTextoComparacion(textoMsg);
 
-      // Soportar variantes que ya usa el bot:
-      // "¿Su caso es nuevo, regular o traslado?"
-      const preguntaTipoEstudianteConTraslado =
-        (t.includes("su caso") &&
-          t.includes("nuevo") &&
+      // Detectar CUALQUIER variante donde el bot haya preguntado el tipo de estudiante
+      const preguntaTipoEstudiante =
+        // Variante 1: "es estudiante nuevo o regular"
+        (t.includes("nuevo") &&
+          t.includes("regular") &&
+          t.includes("estudiante")) ||
+        // Variante 2: "Su caso es nuevo, regular o traslado"
+        (t.includes("nuevo") &&
+          t.includes("regular") &&
+          (t.includes("traslado") || t.includes("caso"))) ||
+        // Variante 3: "es estudiante nuevo, regular o transferencia"
+        (t.includes("nuevo") &&
+          t.includes("regular") &&
+          t.includes("transferencia")) ||
+        // Variante 4: cualquier pregunta que mencione los tres tipos
+        (t.includes("nuevo") &&
+          t.includes("traslado") &&
           t.includes("regular")) ||
-        (t.includes("nuevo") &&
-          t.includes("regular") &&
-          t.includes("traslado")) ||
-        (t.includes("nuevo") &&
-          t.includes("regular") &&
-          t.includes("transferencia"));
+        // Variante 5: preguntas simples tipo "¿es nuevo o regular?"
+        (t.includes("nuevo") && t.includes("regular") && t.length < 300) ||
+        // Variante 6: Gemini puede formular diferente
+        t.includes("tipo de estudiante") ||
+        t.includes("tipo estudiante") ||
+        (t.includes("primera vez") && t.includes("nuevo"));
 
-      if (preguntaTipoEstudianteClasica || preguntaTipoEstudianteConTraslado) {
+      if (preguntaTipoEstudiante) {
         return i;
       }
     }
     return -1;
   })();
 
-  if (idxUltimaPreguntaBot === -1) return null;
+  // Si no se encontró la pregunta del bot en el historial PERO el contexto de la sesión
+  // es de inscripción (hay mensajes sobre inscripción en los últimos mensajes), también proceder
+  const hayContextoInscripcion =
+    idxUltimaPreguntaBot === -1 &&
+    ultimos.some((m) => {
+      const t = normalizarTextoComparacion(m?.mensaje || m?.texto || "");
+      return (
+        t.includes("inscrip") ||
+        t.includes("inscrib") ||
+        t.includes("matric") ||
+        t.includes("requisit") ||
+        t.includes("documento") ||
+        t.includes("ingresar")
+      );
+    });
 
-  // Buscar la pregunta original del usuario (requisitos + inscripción) antes de esa pregunta del bot
+  if (idxUltimaPreguntaBot === -1 && !hayContextoInscripcion) return null;
+
+  // Buscar la pregunta original del usuario antes de la pregunta del bot
+  // Ampliar patrones: no solo "requisit" + "inscrip" sino cualquier pregunta sobre inscripción
   let preguntaOriginal = null;
-  for (let i = idxUltimaPreguntaBot; i >= 0; i--) {
+  const idxInicio =
+    idxUltimaPreguntaBot >= 0 ? idxUltimaPreguntaBot : ultimos.length - 1;
+  for (let i = idxInicio; i >= 0; i--) {
     const m = ultimos[i];
-    if (!m || m.rol !== "usuario") continue;
-    const t = normalizarTextoComparacion(m.mensaje);
+    if (!m) continue;
+    const esUsuario =
+      m.rol === "usuario" || m.rol === "user" || m.autor === "user";
+    if (!esUsuario) continue;
+    const t = normalizarTextoComparacion(m.mensaje || m.texto || "");
+    // Patrón ampliado: cualquier pregunta sobre inscripción / requisitos / matrícula
     if (
-      t.includes("requisit") &&
-      (t.includes("inscrip") || t.includes("inscrib") || t.includes("matric"))
+      t.includes("inscrip") ||
+      t.includes("inscrib") ||
+      t.includes("matric") ||
+      t.includes("requisit") ||
+      t.includes("documento") ||
+      t.includes("ingresar") ||
+      t.includes("entrar") ||
+      (t.includes("hijo") &&
+        (t.includes("nivel") ||
+          t.includes("estudiar") ||
+          t.includes("colegio"))) ||
+      t.includes("que necesito") ||
+      t.includes("que necesita") ||
+      t.includes("que piden")
     ) {
-      preguntaOriginal = m.mensaje;
+      preguntaOriginal = m.mensaje || m.texto;
       break;
     }
   }
@@ -6215,15 +6258,19 @@ async function ejecutarAgente(
           tiempo_ms: tiempo,
         };
       }
-      // Exponer el PDF como URL de descarga temporal (usamos la ruta del archivo)
-      // El servidor debe tener una ruta estática o endpoint para servir estos archivos
-      const urlDescarga = `/api/reportes-agente/descargar/${encodeURIComponent(resultado.nombreArchivo)}`;
+      // Construir URL absoluta del PDF (Railway provee RAILWAY_PUBLIC_DOMAIN)
+      // Sin esto, el link apunta al frontend (Vercel) en vez del backend (Railway)
+      const backendDomain = process.env.RAILWAY_PUBLIC_DOMAIN
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+        : process.env.BACKEND_URL ||
+          `http://localhost:${process.env.PORT || 3001}`;
+      const urlDescarga = `${backendDomain}/api/reportes-agente/descargar/${encodeURIComponent(resultado.nombreArchivo)}`;
       let mensajeRespuesta = `✅ *Reporte generado exitosamente*\n\n`;
       mensajeRespuesta += `📊 *Tipo:* ${resultado.tipo || "lista"}\n`;
       mensajeRespuesta += `👥 *Total registros:* ${resultado.total || 0}\n`;
       if (resultado.totalPendiente)
         mensajeRespuesta += `💰 *Total pendiente:* Bs. ${parseFloat(resultado.totalPendiente).toFixed(2)}\n`;
-      mensajeRespuesta += `\n📥 *Descarga:* ${urlDescarga}\n`;
+      mensajeRespuesta += `\n📥 *Descarga (clic para abrir):*\n${urlDescarga}\n`;
       mensajeRespuesta += `\n_El archivo estará disponible por 2 horas._`;
       return {
         respuesta: mensajeRespuesta,
