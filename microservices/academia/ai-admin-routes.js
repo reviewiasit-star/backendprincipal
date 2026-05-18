@@ -229,9 +229,59 @@ router.post("/chat", authMiddleware, verificarPermisos(), async (req, res) => {
       rol_id: req.user.rol_id,
     };
 
-    // Verificar si es un comando de notificación
+    // ───────────────────────────────────────────────────────────
+    // DETECTOR DE INTENCIÓN DEL ADMIN
+    // Distingue 3 tipos de mensajes del admin al agente:
+    //  1. MEMORIA pura   → "si preguntan por X...", "recuerda que..."
+    //  2. NOTIFICACIÓN   → "avisa a todos que...", "notifica que..."
+    //  3. AMBAS          → "mañana no hay clases, avisa a todos" (notif + memoria)
+    // ───────────────────────────────────────────────────────────
     const mensajeLower = mensaje.toLowerCase().trim();
-    const esComandoNotificacion = [
+
+    // ---- Patrones que indican GUARDAR EN MEMORIA (el admin informa al agente para respuestas futuras) ----
+    const PATRONES_MEMORIA = [
+      // Explícitos: el admin le dice al agente qué responder cuando pregunten
+      "si preguntan",
+      "si alguien pregunta",
+      "cuando pregunten",
+      "si te preguntan",
+      "en caso de que pregunten",
+      "en caso que pregunten",
+      "si alguna persona pregunta",
+      "si alguien te pregunta",
+      "cuando alguien pregunte",
+      "cuando te pregunten",
+      // El admin le pide al agente que recuerde algo
+      "recuerda que",
+      "recuerda esto",
+      "toma nota",
+      "guarda que",
+      "anota que",
+      "que sepas que",
+      "te informo que",
+      "ten en cuenta que",
+      "sabe que",
+      "para que sepas",
+      "quiero que sepas",
+      "quiero que recuerdes",
+      // Ausencias/disponibilidad de personal (sin "avisa a todos")
+      "no estará disponible",
+      "no estara disponible",
+      "está de viaje",
+      "esta de viaje",
+      "estará de viaje",
+      "estara de viaje",
+      "no vendrá hoy",
+      "no vendra hoy",
+      "no asistirá hoy",
+      "no asistira hoy",
+      "no puede atender",
+      "no podrá atender",
+      "no podra atender",
+    ];
+
+    // ---- Patrones que indican NOTIFICACIÓN MASIVA (enviar mensaje a todos los padres) ----
+    const PATRONES_NOTIFICACION = [
       "notificar",
       "notifica",
       "notifique",
@@ -239,9 +289,8 @@ router.post("/chat", authMiddleware, verificarPermisos(), async (req, res) => {
       "enviar mensajes",
       "comunicar",
       "comunica",
-      "avisar",
-      "avisa",
       "avisar a todos",
+      "avisa a todos",
       "notificar a todos",
       "notificar a los padres",
       "notificar a padres",
@@ -249,13 +298,163 @@ router.post("/chat", authMiddleware, verificarPermisos(), async (req, res) => {
       "comunicado",
       "anuncio",
       "anunciar",
-      "informar",
-      "informa",
+      "informar a todos",
+      "informa a todos",
       "envía",
       "envia",
       "mandar",
       "manda",
-    ].some((p) => mensajeLower.includes(p));
+      // más específicos
+      "avisar",
+      "avisa",
+      "informar",
+      "informa",
+    ];
+
+    // Detectar si el mensaje contiene patrones de MEMORIA
+    const esInstruccionMemoria = PATRONES_MEMORIA.some((p) =>
+      mensajeLower.includes(p),
+    );
+
+    // Detectar si el mensaje contiene patrones de NOTIFICACIÓN
+    const esComandoNotificacion = PATRONES_NOTIFICACION.some((p) =>
+      mensajeLower.includes(p),
+    );
+
+    // Detectar si hay ausencia implícita de personal (SIN patrones de notificación masiva)
+    // Ej: "la cajera no estará hoy" sin "avisa a todos"
+    const esAusenciaImplicita =
+      !esComandoNotificacion &&
+      !esInstruccionMemoria &&
+      /\b(cajera|director[ao]|secretar[iao]|administrador[ao]|docente|profesor[ao]|maestr[ao])\b/.test(
+        mensajeLower,
+      ) &&
+      /(no estar[aá]|no asistir[aá]|no vendr[aá]|ausente|de viaje|no podr[aá]|no puede|no habr[aá])/.test(
+        mensajeLower,
+      );
+
+    // ---- Guardar en MEMORIA si corresponde ----
+    const debeGuardarMemoria =
+      esInstruccionMemoria ||
+      esAusenciaImplicita ||
+      (esComandoNotificacion &&
+        /(ma[ñn]ana|hoy|no hay clases|feriado|evento|actividad|reuni[oó]n)/.test(
+          mensajeLower,
+        ));
+
+    let memoriaGuardada = false;
+    let idMemoria = null;
+
+    if (
+      debeGuardarMemoria &&
+      (infoUsuario.rol === "Administrador" || infoUsuario.rol === "Director")
+    ) {
+      try {
+        const memoriasService = require("./agenteMemoriasService");
+
+        // Limpiar el mensaje para extraer el contenido real a recordar
+        // (quitar frases como "si preguntan", "recuerda que", etc.)
+        let contenidoMemoria = mensaje.trim();
+
+        // Extraer lo que viene después de los patrones de memoria
+        const matchSiPreguntan = mensaje.match(
+          /(?:si\s+(?:alguien\s+)?(?:te\s+)?preguntan?|cuando\s+(?:te\s+)?pregunten?|en\s+caso\s+(?:de\s+)?que\s+pregunten?)\s+(?:por\s+)?(.+)/i,
+        );
+        if (matchSiPreguntan && matchSiPreguntan[1]) {
+          contenidoMemoria = matchSiPreguntan[1].trim();
+        }
+
+        const matchRecuerda = mensaje.match(
+          /(?:recuerda\s+que|toma\s+nota(?:\s+que)?|guarda\s+que|anota\s+que|que\s+sepas\s+que|ten\s+en\s+cuenta\s+que)\s+(.+)/i,
+        );
+        if (matchRecuerda && matchRecuerda[1]) {
+          contenidoMemoria = matchRecuerda[1].trim();
+        }
+
+        // Auto-detectar tipo y keywords
+        const tipo = memoriasService.detectarTipo(contenidoMemoria);
+        const keywords = memoriasService.extraerKeywords(contenidoMemoria);
+
+        // Extraer fecha de fin si se menciona
+        let fechaFin = null;
+        // "estará disponible el 25 de mayo" → fecha fin = 25 de mayo a las 23:59
+        const matchFechaDisponible = contenidoMemoria.match(
+          /(?:estar[aá]\s+disponible|regresa|vuelve|volver[aá])(?:\s+el)?\s+(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
+        );
+        if (matchFechaDisponible) {
+          const MESES = {
+            enero: 0,
+            febrero: 1,
+            marzo: 2,
+            abril: 3,
+            mayo: 4,
+            junio: 5,
+            julio: 6,
+            agosto: 7,
+            septiembre: 8,
+            octubre: 9,
+            noviembre: 10,
+            diciembre: 11,
+          };
+          const dia = parseInt(matchFechaDisponible[1]);
+          const mesStr = matchFechaDisponible[2].toLowerCase();
+          const mes = MESES[mesStr];
+          const anio = new Date().getFullYear();
+          fechaFin = new Date(anio, mes, dia, 23, 59, 0).toISOString();
+        }
+        // "hasta mañana" → fecha fin = mañana a las 23:59
+        if (
+          !fechaFin &&
+          /(hasta\s+ma[ñn]ana|solo\s+(?:por\s+)?hoy|no\s+estar[aá]\s+hoy)/.test(
+            mensajeLower,
+          )
+        ) {
+          const manana = new Date();
+          manana.setDate(manana.getDate() + 1);
+          manana.setHours(23, 59, 0, 0);
+          fechaFin = manana.toISOString();
+        }
+
+        idMemoria = await memoriasService.crearMemoria({
+          contenido: contenidoMemoria,
+          tipo,
+          keywords,
+          fecha_fin: fechaFin,
+          creado_por: usuarioId,
+        });
+        memoriaGuardada = true;
+        console.log(
+          `🧠 [admin] Memoria guardada (ID ${idMemoria}): "${contenidoMemoria.substring(0, 80)}..."`,
+        );
+      } catch (memErr) {
+        console.warn("⚠️ [admin] No se pudo guardar memoria:", memErr.message);
+      }
+    }
+
+    // ---- Si es SOLO memoria (no notificación masiva) → responder y terminar ----
+    if (
+      (esInstruccionMemoria || esAusenciaImplicita) &&
+      !esComandoNotificacion
+    ) {
+      const confirmacion = memoriaGuardada
+        ? `🧠 *Entendido y registrado en mi memoria.*\n\n` +
+          `Cuando alguien me pregunte sobre esto, responderé en base a lo que me informaste.\n\n` +
+          `📌 *Resumen de lo que recordaré:*\n${mensaje.trim()}\n\n` +
+          `👀 Puedes ver y gestionar todos mis avisos en el panel → _Memoria del Agente_.\n` +
+          `Si quieres que también envíe este aviso a todos los padres ahora mismo, dime: *"avisa a todos que..."*`
+        : `🧠 Entendido. Tomaré nota de esto para responder correctamente si alguien pregunta.\n` +
+          `_(Nota: no pude guardar en la base de datos, pero lo tendré presente en esta sesión)_`;
+
+      resultado = {
+        respuesta: confirmacion,
+        herramienta: "memoria_agente",
+        clasificacion: "memoria_guardada",
+        tiempo_ms: Date.now() - Date.now(),
+        memoria_id: idMemoria,
+      };
+
+      return { ...resultado, sesion_id: sesionId };
+    }
 
     let resultado;
 
@@ -265,6 +464,92 @@ router.post("/chat", authMiddleware, verificarPermisos(), async (req, res) => {
       (infoUsuario.rol === "Administrador" || infoUsuario.rol === "Director")
     ) {
       inicializarServiciosNotificaciones();
+
+      // 🆕 DETECCIÓN INTELIGENTE: ¿es recordatorio de pagos pendientes de un mes?
+      // Ej: "avisa a los padres que deben del mes de junio que deben cancelar el 20 de junio"
+      const MESES_ES = [
+        "enero",
+        "febrero",
+        "marzo",
+        "abril",
+        "mayo",
+        "junio",
+        "julio",
+        "agosto",
+        "septiembre",
+        "octubre",
+        "noviembre",
+        "diciembre",
+      ];
+      const mesEncontrado = MESES_ES.find((m) => mensajeLower.includes(m));
+      const esRecordatorioPago =
+        mesEncontrado &&
+        /deb[ae]n|deben\s+de|pendiente|cuota|mensualidad|pago.*mes|recordatorio.*pago|cancelar.*cuota/.test(
+          mensajeLower,
+        );
+
+      if (esRecordatorioPago && notificacionesService) {
+        console.log(
+          `💰 [admin] Detectado recordatorio de pagos del mes: ${mesEncontrado}`,
+        );
+
+        // Extraer fecha de vencimiento si se menciona (ej: "el 20 de junio")
+        let fechaVencimientoTexto = null;
+        const matchFechaVenc = mensaje.match(
+          /(el\s+)?(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
+        );
+        if (matchFechaVenc) {
+          fechaVencimientoTexto = `${matchFechaVenc[2]} de ${matchFechaVenc[3].charAt(0).toUpperCase() + matchFechaVenc[3].slice(1)}`;
+        }
+
+        // Extraer mensaje adicional del admin
+        let mensajeAdminExtra = mensaje
+          .replace(/avisa|avise|notifica|comunica|informa|envía|envia/gi, "")
+          .replace(/a (todos|los) (los\s+)?padres?/gi, "")
+          .replace(/que deben del mes de \w+/gi, "")
+          .replace(/que deben cancelar/gi, "")
+          .replace(/su\s+cuota/gi, "")
+          .replace(/la\s+cuota/gi, "")
+          .replace(/el\s+\d{1,2}\s+de\s+\w+/gi, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        try {
+          const resultadoPagos =
+            await notificacionesService.enviarRecordatorioPagosPendientes({
+              mes: mesEncontrado,
+              fechaVencimiento: fechaVencimientoTexto,
+              mensajeExtra:
+                mensajeAdminExtra.length > 5 ? mensajeAdminExtra : "",
+            });
+
+          const estadoExtra = resultadoPagos.mensaje_estado || "";
+          resultado = {
+            respuesta:
+              estadoExtra ||
+              `✅ *Recordatorio de pagos enviado exitosamente*\n\n` +
+                `📅 *Mes:* ${resultadoPagos.mes || mesEncontrado}\n` +
+                `👥 *Padres/tutores contactados:* ${resultadoPagos.total_telefonos}\n` +
+                `📊 *Estudiantes con deuda pendiente:* ${resultadoPagos.total_estudiantes}\n` +
+                `📤 *Mensajes enviados:* ${resultadoPagos.enviadas}\n` +
+                (resultadoPagos.errores > 0
+                  ? `⚠️ *Errores:* ${resultadoPagos.errores}\n`
+                  : "") +
+                (memoriaGuardada
+                  ? `\n🧠 También lo guardé en mi memoria para futuras consultas.`
+                  : "") +
+                `\n\n_Cada padre recibió el monto exacto que debe cancelar._`,
+            herramienta: "notificacion_pagos",
+            clasificacion: "recordatorio_pagos",
+            tiempo_ms: 0,
+          };
+
+          return { ...resultado, sesion_id: sesionId };
+        } catch (pagoErr) {
+          console.error("❌ Error en recordatorio de pagos:", pagoErr.message);
+          // Si falla, continuar con el flujo normal de notificación
+        }
+      }
 
       // Extraer mensaje y fecha del comando usando el agente
       try {
@@ -473,6 +758,9 @@ Responde SOLO en formato JSON:
             `📊 ${resultadoNotificacion.total_estudiantes} estudiantes incluidos\n` +
             (resultadoNotificacion.errores > 0
               ? `\n⚠️ ${resultadoNotificacion.errores} errores`
+              : "") +
+            (memoriaGuardada
+              ? `\n\n🧠 *También lo guardé en mi memoria* (ID ${idMemoria}). Si alguien me pregunta sobre esto por WhatsApp o en el panel, ya sabré qué responder.`
               : ""),
           herramienta: "notificacion",
           clasificacion: "notificacion",
