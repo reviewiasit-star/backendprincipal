@@ -514,14 +514,12 @@ const herramientaGenerarDocumentoAsistencia = new Tool({
  • Año: ${resultado.anio}
 
  El documento está listo para ser descargado desde el panel.`;
-    } catch (error) {
-      console.error('Error en herramienta generar documento asistencia:', error);
-      return `Error al generar documento de asistencia: ${error.message}`;
-    }
-  }
-
-  }
-});
+     } catch (error) {
+       console.error('Error en herramienta generar documento asistencia:', error);
+       return `Error al generar documento de asistencia: ${error.message}`;
+     }
+   }
+ });
 
 // Último documento de asistencia generado (para que el frontend ofrezca descarga)
 let lastDocumentoAsistencia = null;
