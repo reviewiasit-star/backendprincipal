@@ -4171,13 +4171,27 @@ function analizarSentimiento(pregunta, historialConversacion = []) {
     preguntaLower.includes(palabra),
   );
 
-  // Detectar necesidad de escalamiento
-  const necesitaEscalamiento =
-    preguntaLower.includes("hablar con") ||
-    preguntaLower.includes("contactar") ||
-    preguntaLower.includes("secretaria") ||
-    preguntaLower.includes("director") ||
-    preguntaLower.includes("administrador");
+  // Detectar necesidad de escalamiento (solo si hay intención explícita de hablar o contactar con un humano)
+  const palabrasEscalamientoDirecto = [
+    "hablar con",
+    "contactar con",
+    "contactar a",
+    "comunicarme con",
+    "comunicarme a",
+    "llamar a",
+    "hablar directamente",
+    "atencion humana",
+    "persona real",
+    "un humano",
+    "traspaso",
+    "derivacion",
+    "derivar",
+    "con alguien",
+    "con una persona"
+  ];
+  const necesitaEscalamiento = palabrasEscalamientoDirecto.some((frase) =>
+    preguntaLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(frase)
+  );
 
   // Detectar satisfacción
   const tieneSatisfaccion = palabrasSatisfaccion.some((palabra) =>
