@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+const fs = require("fs");
 const pool = require("./microservices/academia/config");
 const { PORT: APP_PORT } = require("./microservices/academia/appConfig");
 const whatsappRoutes = require("./microservices/academia/whatsappRoutes");
@@ -21,9 +23,16 @@ const {
   configurarRutasGestionAcademica,
 } = require("./microservices/academia/GestionAcademico");
 const reporteInscripcionRoutes = require("./microservices/academia/ReporteInscripcion");
+const {
+  configurarRutasProductos,
+} = require("./microservices/tienda/GestionProductos");
+const comprobantesRoutes = require("./microservices/pagos/comprobantesRoutes");
+const { configurarRutasEstudiantesCajas } = require("./microservices/academia/estudiantesCajas");
 
 const app = express();
 app.use(cors());
+// Servir imágenes de productos de tienda
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Aumentar límite de tamaño para JSON y URL-encoded (50MB)
 // Importante: NO intentar parsear multipart/form-data como JSON o URL-encoded
 const jsonParser = express.json({ limit: "50mb" });
@@ -57,8 +66,6 @@ app.use("/api/documentos-agente", documentosRoutes);
 const agenteMemoriasRoutes = require("./microservices/academia/agenteMemoriasRoutes");
 app.use("/api/agente-memorias", agenteMemoriasRoutes);
 // Endpoint para descargar reportes PDF generados por el agente
-const path = require("path");
-const fs = require("fs");
 const {
   REPORTES_DIR,
 } = require("./microservices/academia/agenteReportesPDFService");
@@ -94,6 +101,15 @@ configurarRutasGestionAcademica(app, pool, authMiddleware);
 
 // Configurar rutas de reportes de inscripción
 reporteInscripcionRoutes(app, authMiddleware);
+
+// Configurar rutas del módulo de Tienda
+configurarRutasProductos(app, pool, authMiddleware);
+
+// Rutas de comprobantes firmados (upload, view, download, delete)
+app.use("/api/comprobantes", comprobantesRoutes);
+
+// Rutas de estudiantes para módulo de cajas (servicios-estudiante, busqueda-basica, buscar-por-ci)
+configurarRutasEstudiantesCajas(app, pool, authMiddleware);
 
 // Configurar rutas de reportes de pagos (solo lectura para Admin/Director)
 const { configurarRutasReportes } = require("./microservices/pagos/reportes");

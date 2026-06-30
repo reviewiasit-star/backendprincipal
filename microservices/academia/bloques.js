@@ -4,7 +4,7 @@ function configurarRutasBloques(app, pool, authMiddleware) {
   // Obtener todos los bloques
   app.get('/api/bloques', async (req, res) => {
     try {
-      const [rows] = await pool.query('SELECT * FROM bloque ORDER BY descripcion');
+      const [rows] = await pool.query('SELECT id, descripcion, logo_url FROM bloque ORDER BY descripcion');
       res.json(rows);
     } catch (error) {
       console.error('Error al obtener bloques:', error);
@@ -15,7 +15,7 @@ function configurarRutasBloques(app, pool, authMiddleware) {
   // Crear un nuevo bloque
   app.post('/api/bloques', authMiddleware, async (req, res) => {
     try {
-      const { descripcion } = req.body;
+      const { descripcion, logo_url } = req.body;
       
       // Validar campos obligatorios
       if (!descripcion) {
@@ -26,15 +26,15 @@ function configurarRutasBloques(app, pool, authMiddleware) {
       }
 
       const [result] = await pool.query(
-        'INSERT INTO bloque (descripcion) VALUES (?)', 
-        [descripcion]
+        'INSERT INTO bloque (descripcion, logo_url) VALUES (?, ?)', 
+        [descripcion, logo_url || null]
       );
       
       res.json({ 
         ok: true, 
         id: result.insertId, 
         message: 'Bloque creado exitosamente',
-        bloque: { id: result.insertId, descripcion }
+        bloque: { id: result.insertId, descripcion, logo_url: logo_url || null }
       });
     } catch (error) {
       console.error('Error al crear bloque:', error);
@@ -46,7 +46,7 @@ function configurarRutasBloques(app, pool, authMiddleware) {
   app.put('/api/bloques/:id', authMiddleware, async (req, res) => {
     try {
       const { id } = req.params;
-      const { descripcion } = req.body;
+      const { descripcion, logo_url } = req.body;
       
       // Validar campos obligatorios
       if (!descripcion) {
@@ -62,11 +62,14 @@ function configurarRutasBloques(app, pool, authMiddleware) {
         return res.status(404).json({ ok: false, message: 'Bloque no encontrado' });
       }
 
-      await pool.query('UPDATE bloque SET descripcion=? WHERE id=?', [descripcion, id]);
+      await pool.query(
+        'UPDATE bloque SET descripcion=?, logo_url=? WHERE id=?',
+        [descripcion, logo_url !== undefined ? logo_url : null, id]
+      );
       res.json({ 
         ok: true, 
         message: 'Bloque actualizado exitosamente',
-        bloque: { id, descripcion }
+        bloque: { id, descripcion, logo_url: logo_url || null }
       });
     } catch (error) {
       console.error('Error al actualizar bloque:', error);
@@ -108,4 +111,5 @@ function configurarRutasBloques(app, pool, authMiddleware) {
 }
 
 module.exports = { configurarRutasBloques };
+
 

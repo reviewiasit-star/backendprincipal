@@ -632,27 +632,57 @@ router.post("/chat", authMiddleware, verificarPermisos(), async (req, res) => {
 
         console.log("📝 Mensaje extraído y mejorado:", mensajeExtraido);
 
-        // Usar el agente para extraer información adicional (fecha y filtros)
-        const promptExtraccion = `Analiza el siguiente comando de notificación y extrae SOLO la fecha y filtros (si existen). NO modifiques el mensaje.
+        // Consultar IDs reales antes de llamar a Gemini para asegurar precisión de mapeo
+        let nivelesDb = [];
+        let cursosDb = [];
+        let bloquesDb = [];
+        try {
+          const [nivRes] = await pool.query("SELECT id, nombre FROM nivel");
+          nivelesDb = nivRes;
+          const [curRes] = await pool.query("SELECT id, nombre FROM curso");
+          cursosDb = curRes;
+          const [bloRes] = await pool.query("SELECT id, descripcion FROM bloque");
+          bloquesDb = bloRes;
+        } catch (dbErr) {
+          console.error("⚠️ Error consultando tablas de filtros para el prompt de extracción:", dbErr);
+        }
 
-Comando: "${mensaje}"
-Mensaje extraído: "${mensajeExtraido}"
+        const listadoNiveles = nivelesDb.map(n => `- ID: ${n.id}, Nombre: "${n.nombre}"`).join("\n");
+        const listadoCursos = cursosDb.map(c => `- ID: ${c.id}, Nombre: "${c.nombre}"`).join("\n");
+        const listadoBloques = bloquesDb.map(b => `- ID: ${b.id}, Nombre: "${b.descripcion}"`).join("\n");
+
+        // Usar el agente para extraer información adicional (fecha, mensaje limpio y filtros con sus IDs reales)
+        const promptExtraccion = `Analiza el siguiente comando de notificación y extrae la fecha, el mensaje limpio y los filtros (asociando los IDs correctos basados en los datos reales provistos abajo).
+
+Comando del usuario: "${mensaje}"
+
+DATOS REALES DE LA BASE DE DATOS (Mapea estrictamente a estos IDs si el mensaje los menciona):
+NIVELES:
+${listadoNiveles || "(No hay niveles disponibles)"}
+
+CURSOS:
+${listadoCursos || "(No hay cursos disponibles)"}
+
+BLOQUES:
+${listadoBloques || "(No hay bloques disponibles)"}
 
 IMPORTANTE:
-- Si el mensaje dice "a todos", "todos los padres", "toda la unidad educativa", "toda la comunidad educativa", NO agregues filtros académicos (nivel_id, curso_id, bloque_id, turno = null)
-- Solo agrega filtros si el mensaje menciona ESPECÍFICAMENTE un nivel, curso, bloque o turno (mañana/tarde)
-- Los IDs deben ser los de la base de datos si los conoces; si el usuario dice solo "primer nivel", deja nivel_id null y el sistema puede igual enviar si el texto es claro (prioriza turno en "turno mañana" / "de la mañana")
-- Si dice "turno mañana", "jornada mañana", "de la mañana" (sin ser la palabra fecha "mañana"), pon turno: "Mañana" o el texto que coincida con inscripciones.turno
-- Si menciona "mañana" como FECHA (no como turno), calcula la fecha de mañana en formato YYYY-MM-DD
+1. Si el mensaje dice "a todos", "todos los padres", "toda la unidad educativa", "general", NO agregues filtros académicos (nivel_id, curso_id, bloque_id deben ser null).
+2. Si el mensaje especifica un nivel (ej: "primer nivel", "de primer nivel", "los de primero"), busca el ID que más se asemeje en la lista de NIVELES (ej: "PRIMER NIVEL" es ID 1) y asígnalo a "nivel_id".
+3. Si el mensaje menciona un curso específico (ej: "primero de primaria", "segundo de secundaria"), busca el ID correspondiente en CURSOS y asígnalo a "curso_id".
+4. Si menciona un bloque (ej: "bloque a", "bloque b"), asocia el ID de BLOQUES a "bloque_id".
+5. Si menciona "mañana" como fecha (no como turno), calcula la fecha de mañana en formato YYYY-MM-DD.
+6. Si dice "turno mañana" o "turno tarde" (o similar), asocia "turno": "Mañana" o "Tarde".
 
-Responde SOLO en formato JSON:
+Responde ÚNICAMENTE con un objeto JSON válido, sin Markdown adicional:
 {
+  "mensaje": "Mensaje limpio sin el comando de aviso (ej: 'Mañana no hay clases por suspensión de clases por bloqueo.')",
   "fecha": "YYYY-MM-DD o null",
   "filtros": {
     "nivel_id": número o null,
     "curso_id": número o null,
     "bloque_id": número o null,
-    "turno": "texto o null (ej. Mañana, Tarde según inscripciones)"
+    "turno": "Mañana o Tarde o null"
   }
 }`;
 
@@ -665,9 +695,9 @@ Responde SOLO en formato JSON:
           infoUsuario,
         );
 
-        // Intentar parsear JSON de la respuesta del agente (solo fecha y filtros)
+        // Intentar parsear JSON de la respuesta del agente (mensaje, fecha y filtros)
         let datosNotificacion = {
-          mensaje: mensajeExtraido, // Usar el mensaje extraído manualmente
+          mensaje: mensajeExtraido, // Usar el mensaje extraído manualmente por defecto
           fecha: null,
           filtros: {},
         };
@@ -677,7 +707,12 @@ Responde SOLO en formato JSON:
           const jsonMatch = resultadoExtraccion.respuesta.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const datosAgente = JSON.parse(jsonMatch[0]);
-            // Solo usar fecha y filtros del agente, el mensaje ya lo tenemos
+            
+            // Si el agente extrajo un mensaje válido y más limpio, preferir ese
+            if (datosAgente.mensaje && datosAgente.mensaje.length > 5) {
+              datosNotificacion.mensaje = datosAgente.mensaje;
+            }
+            
             datosNotificacion.fecha = datosAgente.fecha || null;
             datosNotificacion.filtros = datosAgente.filtros || {};
           }
@@ -687,6 +722,47 @@ Responde SOLO en formato JSON:
           );
           // Mantener el mensaje extraído manualmente
         }
+
+        // --- FALLBACK MANUAL ROBUSTO PARA FILTROS ---
+        if (!datosNotificacion.filtros) {
+          datosNotificacion.filtros = {};
+        }
+        
+        const mensajeLowerForFallback = mensaje.toLowerCase();
+
+        // 1. Mapeo robusto de NIVELES
+        if (!datosNotificacion.filtros.nivel_id && nivelesDb && nivelesDb.length > 0) {
+          for (const nivel of nivelesDb) {
+            const nombreNorm = nivel.nombre.toLowerCase();
+            const palabrasClave = [nombreNorm, nombreNorm.replace(" nivel", ""), nombreNorm.replace("nivel", "").trim()];
+            
+            if (nivel.id === 1) palabrasClave.push("primer nivel", "primero nivel", "los de primero", "los de primer");
+            else if (nivel.id === 2) palabrasClave.push("segundo nivel", "los de segundo", "segundo");
+            else if (nivel.id === 3) palabrasClave.push("tercer nivel", "tercero nivel", "los de tercero", "los de tercer");
+            else if (nivel.id === 4) palabrasClave.push("cuarto nivel", "cuarto", "los de cuarto");
+            else if (nivel.id === 5) palabrasClave.push("quinto nivel", "quinto", "los de quinto");
+            else if (nivel.id === 6) palabrasClave.push("sexto nivel", "sexto", "los de sexto");
+
+            const coincide = palabrasClave.some(pc => new RegExp(`\\b${pc}\\b`, 'i').test(mensajeLowerForFallback));
+            if (coincide) {
+              datosNotificacion.filtros.nivel_id = nivel.id;
+              console.log(`🎯 [Fallback Manual] Mapeado nivel_id ${nivel.id} para "${nivel.nombre}"`);
+              break;
+            }
+          }
+        }
+        
+        // 2. Mapeo de TURNOS
+        if (!datosNotificacion.filtros.turno) {
+          if (mensajeLowerForFallback.includes("turno mañana") || mensajeLowerForFallback.includes("turno de la mañana")) {
+            datosNotificacion.filtros.turno = "Mañana";
+            console.log(`🎯 [Fallback Manual] Mapeado turno "Mañana"`);
+          } else if (mensajeLowerForFallback.includes("turno tarde") || mensajeLowerForFallback.includes("turno de la tarde")) {
+            datosNotificacion.filtros.turno = "Tarde";
+            console.log(`🎯 [Fallback Manual] Mapeado turno "Tarde"`);
+          }
+        }
+        // ---------------------------------------------
 
         // VALIDACIÓN CRÍTICA: Si el mensaje dice "a todos", eliminar TODOS los filtros
         const mensajeLower = mensaje.toLowerCase();

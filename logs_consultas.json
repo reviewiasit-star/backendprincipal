@@ -958,5 +958,101 @@
     "clasificacion": "notificacion",
     "tiempo_respuesta_ms": 0,
     "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-19T22:42:16.688Z",
+    "pregunta": "Hola",
+    "herramienta": "ayuda",
+    "clasificacion": "ayuda",
+    "tiempo_respuesta_ms": 31,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-19T22:59:28.664Z",
+    "pregunta": "por si preguntan por la directora no estara hasta el viernes",
+    "herramienta": "memoria_agente",
+    "clasificacion": "memoria_guardada",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-19T23:14:18.173Z",
+    "pregunta": "avisa que los de primer nivel mañana no hay clases por suspension de clases por bloqueo",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-19T23:28:07.171Z",
+    "pregunta": "avisa a los de segundo nivel que mañana ingresan a las 10 am a clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-20T00:08:45.455Z",
+    "pregunta": "comunica solo a los de segundo nivel que mañana no tienen clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-20T00:28:48.456Z",
+    "pregunta": "comunica solo a los de segundo nivel que mañana no tienen clases",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-20T00:29:32.772Z",
+    "pregunta": "avisa que los de primer nivel mañana tienen clases normales",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-20T13:21:37.174Z",
+    "pregunta": "mañana no hay clases avisa a los de primer nivel",
+    "herramienta": "notificacion",
+    "clasificacion": "notificacion",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-20T13:22:18.754Z",
+    "pregunta": "por si pregunta por la cajera no estara hasta el 25 de mayo",
+    "herramienta": "memoria_agente",
+    "clasificacion": "memoria_guardada",
+    "tiempo_respuesta_ms": 0,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-31T20:29:03.658Z",
+    "pregunta": "Hola, ¿cuáles son los requisitos de inscripción según el reglamento?",
+    "herramienta": "reglamento",
+    "clasificacion": "reglamento",
+    "tiempo_respuesta_ms": 93,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-05-31T20:36:56.110Z",
+    "pregunta": "Hola, ¿cuáles son los requisitos de inscripción según el reglamento?",
+    "herramienta": "cache",
+    "clasificacion": "cache",
+    "tiempo_respuesta_ms": 13,
+    "usuario_id": 1
+  },
+  {
+    "timestamp": "2026-06-01T14:02:00.596Z",
+    "pregunta": "hola",
+    "herramienta": "ayuda",
+    "clasificacion": "ayuda",
+    "tiempo_respuesta_ms": 62,
+    "usuario_id": 1
   }
 ]

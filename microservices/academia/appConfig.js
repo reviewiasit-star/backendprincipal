@@ -26,12 +26,12 @@ module.exports = {
   NODE_ENV: "production",
   PORT: parseInt(process.env.PORT, 10) || 3001,
 
-  WHATSAPP_DEBUG: false,
+  WHATSAPP_DEBUG: false, // false en producción para no llenar los logs con polls
   // En Railway (Docker) los eventos 'message'/'message_create' de Puppeteer no se emiten
   // de forma confiable. Habilitamos el poll como mecanismo principal de recepción.
   WHATSAPP_UNREAD_POLL_ENABLED: true,
   WHATSAPP_GRACE_MS: 5 * 60 * 1000,
-  WHATSAPP_UNREAD_POLL_INTERVAL_MS: 12000, // Chequear mensajes no leídos cada 12 segundos
+  WHATSAPP_UNREAD_POLL_INTERVAL_MS: 10000, // Poll cada 10s - equilibrio entre velocidad y ruido en logs
   WHATSAPP_PROCESSED_TTL_MS: 10 * 60 * 1000,
   WHATSAPP_PROCESSED_MAX: 5000,
   WHATSAPP_CI_WINDOW_MS: 3 * 60 * 1000,

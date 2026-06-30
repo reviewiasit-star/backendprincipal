@@ -2,9 +2,7 @@ const express = require('express');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const { configurarRutasUsuarios } = require('../microservices/academia/Usuarios');
-const { authMiddleware } = require('../middleware/auth');
-
-const JWT_SECRET_TEST = process.env.JWT_SECRET || 'tu_clave_secreta_super_segura_2024';
+const { authMiddleware, JWT_SECRET: JWT_SECRET_TEST } = require('../middleware/auth');
 
 function createApp(poolMock) {
   const app = express();

@@ -79,6 +79,11 @@ function configurarRutasReportes(app, pool, authMiddleware) {
           e.apellido_paterno,
           e.apellido_materno,
           e.ci_estudiante,
+          e.telefono_domicilio_padre,
+          e.telefono_oficina_padre,
+          e.telefono_domicilio_madre,
+          e.telefono_oficina_madre,
+          ca.telefonos_aviso,
           i.bloque_id,
           b.descripcion AS bloque_nombre,
           i.nivel_id,
@@ -86,6 +91,7 @@ function configurarRutasReportes(app, pool, authMiddleware) {
           n.meses AS nivel_meses,
           i.curso_id,
           c.nombre AS curso_nombre,
+          COALESCE(NULLIF(TRIM(c.turno), ''), i.turno) AS turno,
           ce.id AS compromiso_id,
           ce.total_cuotas,
           ce.total_general,
@@ -100,6 +106,12 @@ function configurarRutasReportes(app, pool, authMiddleware) {
         LEFT JOIN nivel n ON i.nivel_id = n.id
         LEFT JOIN curso c ON i.curso_id = c.id
         LEFT JOIN bloque b ON i.bloque_id = b.id
+        LEFT JOIN (
+          SELECT estudiante_id, GROUP_CONCAT(telefono SEPARATOR ', ') as telefonos_aviso
+          FROM contacto_aviso
+          WHERE activo = TRUE
+          GROUP BY estudiante_id
+        ) ca ON e.id = ca.estudiante_id
         WHERE
           ${whereClauses.join('\n          AND ')}
         ORDER BY
@@ -341,12 +353,18 @@ function configurarRutasReportes(app, pool, authMiddleware) {
           compromiso_id: estudiante.compromiso_id,
           nombre: `${estudiante.nombre} ${estudiante.apellido_paterno} ${estudiante.apellido_materno}`,
           ci_estudiante: estudiante.ci_estudiante,
+          telefono_domicilio_padre: estudiante.telefono_domicilio_padre,
+          telefono_oficina_padre: estudiante.telefono_oficina_padre,
+          telefono_domicilio_madre: estudiante.telefono_domicilio_madre,
+          telefono_oficina_madre: estudiante.telefono_oficina_madre,
+          telefonos_aviso: estudiante.telefonos_aviso,
           bloque_id: estudiante.bloque_id,
           bloque_nombre: estudiante.bloque_nombre,
           nivel_id: estudiante.nivel_id,
           nivel_nombre: estudiante.nivel_nombre,
           curso_id: estudiante.curso_id,
           curso_nombre: estudiante.curso_nombre,
+          turno: estudiante.turno,
           pagos_por_mes: pagosPorMes,
           total_pagado: totalPagado,
           total_esperado: totalEsperado,

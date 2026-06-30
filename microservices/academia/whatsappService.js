@@ -570,18 +570,17 @@ class WhatsAppService {
             typeof message.from === "string"
               ? message.from
               : toIdString(message.from) || "";
-          // Log siempre visible para diagnosticar si llegan eventos y por qué se filtran
+
+          // Evitar reprocesar el mismo mensaje por polls/listeners múltiples
+          // IMPORTANTE: verificar ANTES de loguear para no llenar la consola
+          if (yaProcesado(message, fromMsg)) {
+            return;
+          }
+
+          // Log solo para mensajes nuevos que sí se van a procesar
           console.log(
             `📩 [WhatsApp EVENT] from=${fromMsg || "?"} fromMe=${!!message.fromMe} type=${message.type || "?"} id=${idStr.slice(0, 40)} body="${bodyPreview}"`,
           );
-
-          // Evitar reprocesar el mismo mensaje por polls/listeners múltiples
-          if (yaProcesado(message, fromMsg)) {
-            debugLog(
-              `🔁 [WhatsApp] Ignorado (ya procesado) id=${idStr.slice(0, 30)}`,
-            );
-            return;
-          }
 
           // Ignorar mensajes del propio bot (evita bucles)
           if (message.fromMe) {
@@ -606,9 +605,10 @@ class WhatsAppService {
 
           if (message.timestamp != null) {
             const mensajeTimestamp = message.timestamp * 1000;
-            if (mensajeTimestamp < this.serverStartTime) {
-              debugLog(
-                `⏭️ [WhatsApp] Ignorado (anterior al inicio del servidor)`,
+            const TOLERANCIA_DRIFT = 5 * 60 * 1000; // 5 minutos de tolerancia para desfase de reloj
+            if (mensajeTimestamp < this.serverStartTime - TOLERANCIA_DRIFT) {
+              console.log(
+                `⏭️ [WhatsApp] Ignorado (mensaje antiguo, enviado hace ${Math.round((Date.now() - mensajeTimestamp) / 1000)}s - anterior al inicio del servidor con margen de 5m)`
               );
               return;
             }
@@ -1704,15 +1704,13 @@ class WhatsAppService {
       const procesarChatsUnread = async () => {
         if (!this.client) return;
         const cutoff = this.serverStartTime || 0;
-        // Ventana de búsqueda: buscar mensajes recientes aunque ya estén marcados como leídos.
-        // En Railway, Chrome puede marcar mensajes como leídos antes de que el bot los procese,
-        // por lo que NO podemos confiar solo en unreadCount > 0.
-        const ventanaMs = Math.max(
-          (this._unreadPollIntervalMs || 12000) * 3,
-          60000,
-        ); // mínimo 60s de ventana
+        // Ventana de búsqueda amplia: en localhost/Railway Chrome marca mensajes como leídos
+        // antes de que el bot los procese. Usamos 5 minutos para no perder ninguno.
+        // El sistema de deduplicación (_processedMsgIds) evita respuestas duplicadas.
+        const ventanaMs = 5 * 60 * 1000; // 5 minutos de ventana siempre
         const recentCutoff = Date.now() - ventanaMs;
-        const effectiveCutoff = Math.max(cutoff, recentCutoff);
+        // Usar el más antiguo entre serverStartTime y recentCutoff para no perder mensajes
+        const effectiveCutoff = Math.min(cutoff, recentCutoff);
 
         try {
           const chats = await this.client.getChats().catch(() => []);
@@ -1728,8 +1726,11 @@ class WhatsAppService {
             },
           );
 
-          if (chatsARevisar.length === 0) return;
-          infoLog(
+          if (chatsARevisar.length === 0) {
+            debugLog(`🔍 [WhatsApp Poll] Sin chats con actividad reciente (ventana ${Math.round(ventanaMs/1000)}s)`);
+            return;
+          }
+          debugLog(
             `📬 [WhatsApp] Poll: revisando ${chatsARevisar.length} chat(s) con actividad reciente`,
           );
 
@@ -1741,19 +1742,22 @@ class WhatsAppService {
               if (!Array.isArray(msgs) || msgs.length === 0) continue;
               for (const msg of msgs) {
                 if (!msg || !msg.id || msg.fromMe) continue;
-                // Filtrar por tiempo: solo mensajes dentro de la ventana
+                // Filtrar por tiempo: solo mensajes más nuevos que serverStartTime (con margen de 5min)
+                const TOLERANCIA_DRIFT = 5 * 60 * 1000; // 5 minutos de margen para desfase de reloj
                 if (
                   msg.timestamp != null &&
-                  msg.timestamp * 1000 < effectiveCutoff
-                )
+                  msg.timestamp * 1000 < cutoff - TOLERANCIA_DRIFT
+                ) {
+                  debugLog(`⏭️ [Poll] Msg descartado (anterior al servidor): ts=${msg.timestamp} cutoff=${Math.round(cutoff/1000)}`);
                   continue;
+                }
                 const from = typeof msg.from === "string" ? msg.from : "";
                 if (
                   from === "status@broadcast" ||
                   (from && from.includes("@g.us"))
                 )
                   continue;
-                infoLog(
+                debugLog(
                   `📩 [WhatsApp POLL] Procesando mensaje id=${msg.id?._serialized?.slice(0, 30)} from=${from}`,
                 );
                 handlerMensaje(msg).catch((e) =>
@@ -1824,7 +1828,8 @@ class WhatsAppService {
             if (!Array.isArray(msgs) || msgs.length === 0) return;
             for (const msg of msgs) {
               if (!msg || !msg.id || msg.fromMe) continue;
-              if (msg.timestamp != null && msg.timestamp * 1000 < cutoff)
+              const TOLERANCIA_DRIFT = 5 * 60 * 1000; // 5 minutos de margen
+              if (msg.timestamp != null && msg.timestamp * 1000 < cutoff - TOLERANCIA_DRIFT)
                 continue;
               const fr =
                 toIdString(msg.from) ||

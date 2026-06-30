@@ -1019,8 +1019,7 @@ function configurarRutasUsuarios(app, pool, authMiddleware) {
       }
 
       // Listado de tablas a limpiar según base actual
-      // IMPORTANTE: NO incluir 'roles', 'usuarios', 'estados_estudiante' (se preservan).
-      // Se eliminan también estructura académica y becas: curso → nivel → bloque → becas (tras vaciar datos que las referencian).
+      // IMPORTANTE: NO incluir 'roles', 'usuarios', 'estados_estudiante', 'bloque', 'nivel', 'curso', 'becas' (se preservan).
       // Orden: primero tablas dependientes (con foreign keys), luego independientes
       const tablesToTruncate = [
         // Cache y documentos del agente inteligente
@@ -1032,25 +1031,15 @@ function configurarRutasUsuarios(app, pool, authMiddleware) {
         // Datos operativos y registros auxiliares
         'consultas_comprobantes',
         'ocr_comprobantes',
-        'notificaciones_enviadas',
         'pagos_realizados',
         'pagos_mensuales',
         'servicios_estudiante',
         'ingresos',
-        'recordatorios_inscripcion',
-        'sugerencias_becas',
         'inscripciones',
         'compromiso_economico',
         'estudiantes',
-        'curso',
-        'nivel',
-        'bloque',
-        'becas',
         'servicios',
-        'alertas_sistema',
-        'analisis_desercion',
         'contacto_aviso',
-        'reportes_automaticos',
       ];
 
       // Desactivar llaves foráneas, truncar y reactivar
@@ -1088,9 +1077,9 @@ function configurarRutasUsuarios(app, pool, authMiddleware) {
 
       res.json({
         ok: true,
-        message: 'Datos eliminados (excepto usuarios, roles y estados_estudiante). Incluye bloque, nivel, curso, becas y tablas operativas. Los auto-increment fueron reseteados a 0.',
+        message: 'Datos eliminados. Bloques, niveles, cursos y becas SE PRESERVARON. Los auto-increment fueron reseteados a 0.',
         tablas_limpiadas: tablesToTruncate,
-        preservado: ['usuarios', 'roles', 'estados_estudiante'],
+        preservado: ['usuarios', 'roles', 'estados_estudiante', 'bloque', 'nivel', 'curso', 'becas'],
         agente_inteligente_limpiado: ['documentos_agente', 'chunks_documentos', 'embeddings_chunks', 'sesiones_conversacion', 'mensajes_conversacion']
       });
     } catch (error) {

@@ -3,9 +3,7 @@ const request = require('supertest');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { configurarRutasUsuarios } = require('../microservices/academia/Usuarios');
-const { authMiddleware } = require('../middleware/auth');
-const JWT_SECRET_TEST = process.env.JWT_SECRET || 'tu_clave_secreta_super_segura_2024';
-
+const { authMiddleware, JWT_SECRET: JWT_SECRET_TEST } = require('../middleware/auth');
 function createTestApp(poolMock, middleware = authMiddleware) {
   const app = express();
   app.use(express.json());
@@ -14,7 +12,6 @@ function createTestApp(poolMock, middleware = authMiddleware) {
 
   return app;
 }
-
 describe('POST /api/auth/login', () => {
   test('debe rechazar cuando faltan usuario o password', async () => {
     const poolMock = { query: jest.fn() };
@@ -29,7 +26,6 @@ describe('POST /api/auth/login', () => {
     });
     expect(poolMock.query).not.toHaveBeenCalled();
   });
-
   test('debe rechazar credenciales invalidas', async () => {
     const poolMock = {
       query: jest.fn().mockResolvedValue([[]]),
@@ -48,7 +44,6 @@ describe('POST /api/auth/login', () => {
     });
     expect(poolMock.query).toHaveBeenCalledTimes(1);
   });
-
   test('debe permitir login con credenciales validas y retornar token', async () => {
     const passwordPlano = '123456';
     const passwordHash = await bcrypt.hash(passwordPlano, 10);
@@ -85,7 +80,6 @@ describe('POST /api/auth/login', () => {
     expect(poolMock.query).toHaveBeenCalledTimes(1);
   });
 });
-
 describe('GET /api/auth/verify', () => {
   test('debe rechazar cuando no se envia token', async () => {
     const poolMock = { query: jest.fn() };
@@ -152,7 +146,6 @@ describe('GET /api/auth/verify', () => {
     expect(poolMock.query).toHaveBeenCalledTimes(1);
   });
 });
-
 describe('Integracion admin: login + endpoint protegido de negocio', () => {
   test('debe autenticar admin y permitir consultar usuarios-count con token valido', async () => {
     const credencialesAdmin = { usuario: 'admin', password: '4321' };

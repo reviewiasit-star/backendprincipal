@@ -19,6 +19,16 @@ const PUPPETEER_ARGS = [
   "--disable-backgrounding-occluded-windows",
   "--disable-ipc-flooding-protection",
   "--memory-pressure-off",
+  // Flags críticos para que los eventos WebSocket lleguen correctamente en headless
+  "--enable-features=NetworkService,NetworkServiceInProcess",
+  "--disable-hang-monitor",
+  "--disable-prompt-on-repost",
+  "--disable-sync",
+  "--force-color-profile=srgb",
+  "--metrics-recording-only",
+  "--safebrowsing-disable-auto-update",
+  "--password-store=basic",
+  "--use-mock-keychain",
 ];
 
 function archivoExiste(ruta) {
@@ -84,9 +94,11 @@ function obtenerConfigPuppeteerWhatsApp() {
     : buscarNavegadorLinux();
 
   const config = {
-    headless: true,
+    headless: esWindows ? "new" : true, // 'new' headless en Windows para mejor soporte de eventos
     args: PUPPETEER_ARGS,
     timeout: 90000,
+    // Ignorar errores HTTPS que pueden bloquear carga en algunas redes
+    ignoreHTTPSErrors: true,
   };
 
   if (executablePath) {

@@ -879,9 +879,6 @@ class AnalisisAutonomo {
 
     const resultados = {
       pagos_atrasados: null,
-      sugerencias_becas: null,
-      recordatorios_inscripcion: null,
-      analisis_desercion: null,
       reporte_diario: null
     };
 
@@ -889,16 +886,7 @@ class AnalisisAutonomo {
       // 1. Detección de pagos atrasados
       resultados.pagos_atrasados = await this.detectarPagosAtrasados();
 
-      // 2. Sugerencias de becas
-      resultados.sugerencias_becas = await this.sugerirBecas();
-
-      // 4. Recordatorios de inscripción
-      resultados.recordatorios_inscripcion = await this.recordatoriosInscripcion();
-
-      // 5. Análisis de deserción
-      resultados.analisis_desercion = await this.analizarRiesgoDesercion();
-
-      // 6. Reporte diario
+      // 2. Reporte diario
       resultados.reporte_diario = await this.generarReporteInteligente('diario');
 
       console.log('✅ Análisis autónomo completado');

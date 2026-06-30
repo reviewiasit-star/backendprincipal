@@ -58,9 +58,6 @@ class AnalisisAutonomoJob {
       if (resultado.ok) {
         console.log(`✅ Análisis autónomo completado en ${tiempo}ms`);
         console.log(`   - Pagos atrasados: ${resultado.resultados.pagos_atrasados?.total_estudiantes || 0} estudiantes`);
-        console.log(`   - Sugerencias de becas: ${resultado.resultados.sugerencias_becas?.total_candidatos || 0} candidatos`);
-        console.log(`   - Recordatorios inscripción: ${resultado.resultados.recordatorios_inscripcion?.total_estudiantes || 0} estudiantes`);
-        console.log(`   - Análisis deserción: ${resultado.resultados.analisis_desercion?.total_estudiantes || 0} estudiantes analizados`);
         console.log(`   - Reporte generado: ${resultado.resultados.reporte_diario?.ok ? 'Sí' : 'No'}`);
       } else {
         console.error('❌ Error en análisis autónomo:', resultado.error);
@@ -90,20 +87,11 @@ class AnalisisAutonomoJob {
         case 'pagos_atrasados':
           resultado = await this.analisisAutonomo.detectarPagosAtrasados();
           break;
-        case 'sugerencias_becas':
-          resultado = await this.analisisAutonomo.sugerirBecas();
-          break;
-        case 'recordatorios_inscripcion':
-          resultado = await this.analisisAutonomo.recordatoriosInscripcion();
-          break;
-        case 'analisis_desercion':
-          resultado = await this.analisisAutonomo.analizarRiesgoDesercion();
-          break;
         case 'reporte':
           resultado = await this.analisisAutonomo.generarReporteInteligente('diario');
           break;
         default:
-          return { ok: false, message: 'Tipo de análisis no válido' };
+          return { ok: false, message: 'Tipo de análisis no válido. Tipos disponibles: pagos_atrasados, reporte' };
       }
 
       return resultado;

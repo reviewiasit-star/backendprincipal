@@ -293,10 +293,18 @@ class NotificacionesService {
         throw new Error("WhatsApp no está conectado");
       }
 
-      // Construir query para obtener estudiantes según filtros
-      // IMPORTANTE: Solo buscar estudiantes con inscripciones del año actual
-      // para evitar enviar mensajes a estudiantes que no están inscritos este año
-      const anioActual = new Date().getFullYear();
+      // Obtener el año académico dinámicamente de las inscripciones para evitar desincronizaciones
+      let anioActual = new Date().getFullYear();
+      try {
+        const [maxRes] = await pool.query("SELECT MAX(gestion_academica) as max_gestion FROM inscripciones");
+        if (maxRes && maxRes[0] && maxRes[0].max_gestion) {
+          anioActual = maxRes[0].max_gestion;
+          console.log(`📅 [enviarNotificacionManual] Usando gestión académica más reciente de la BD: ${anioActual}`);
+        }
+      } catch (dbErr) {
+        console.warn("⚠️ [enviarNotificacionManual] No se pudo obtener la gestión más reciente de la BD, usando año actual:", dbErr.message);
+      }
+
       const turnoFiltro =
         filtros.turno != null && String(filtros.turno).trim() !== ""
           ? String(filtros.turno).trim()
@@ -315,7 +323,6 @@ class NotificacionesService {
       `;
 
       if (tieneFiltrosAcademicos) {
-        const anioActual = new Date().getFullYear();
         query += ` INNER JOIN inscripciones i ON e.id = i.estudiante_id `;
         query += ` WHERE (
             (i.gestion_academica IS NOT NULL AND i.gestion_academica >= ?)

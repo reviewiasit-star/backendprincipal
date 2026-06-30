@@ -1,5 +1,6 @@
 // Función para configurar las rutas de gestión de estudiantes
 const { guardarContactosWhatsApp } = require('./contacto-aviso');
+const { obtenerInstancia } = require('./whatsappServiceSingleton');
 
 function configurarRutasEstudiantes(app, pool, authMiddleware) {
 
@@ -571,7 +572,165 @@ function configurarRutasEstudiantes(app, pool, authMiddleware) {
     }
   });
 
-  // Crear nuevo estudiante
+  // Endpoint público para registrar nuevo estudiante
+  app.post('/api/estudiantes/public/registro', async (req, res) => {
+    try {
+      console.log('Datos recibidos en registro público:', req.body);
+
+      const {
+        codigo_estudiante, nombre, apellido_paterno, apellido_materno, ci_estudiante,
+        fecha_nacimiento, lugar_nacimiento, genero, direccion,
+        nombre_padre, apellido_padre, ci_padre, profesion_padre, lugar_trabajo_padre,
+        tipo_ci_padre, extension_ci_padre,
+        telefono_domicilio_padre, telefono_oficina_padre,
+        nombre_madre, apellido_madre, ci_madre, profesion_madre, lugar_trabajo_madre,
+        tipo_ci_madre, extension_ci_madre,
+        telefono_domicilio_madre, telefono_oficina_madre,
+        nombre_autorizado1, telefono_autorizado1,
+        nombre_autorizado2, telefono_autorizado2,
+        whatsapp_domicilio_padre, whatsapp_oficina_padre,
+        whatsapp_domicilio_madre, whatsapp_oficina_madre,
+        alergias, vacunas, seguro_medico
+      } = req.body;
+
+      // Mapear género
+      const generoMapeado = genero === 'M' ? 'masculino' : genero === 'F' ? 'femenino' : (genero || null);
+
+      // Validaciones básicas
+      if (!nombre || !ci_estudiante || !fecha_nacimiento) {
+        return res.status(400).json({
+          ok: false,
+          message: 'Nombre, CI y fecha de nacimiento son requeridos'
+        });
+      }
+
+      // Verificar si el CI ya existe
+      const [existingStudent] = await pool.query(
+        'SELECT id FROM estudiantes WHERE ci_estudiante = ? AND estado_id = 1',
+        [ci_estudiante]
+      );
+
+      if (existingStudent.length > 0) {
+        return res.status(400).json({
+          ok: false,
+          message: 'Ya existe un estudiante registrado con este CI'
+        });
+      }
+
+      // Generar código de estudiante si no viene en el body
+      let codigoAGuardar = codigo_estudiante;
+      if (!codigoAGuardar) {
+        const charNombre = (nombre || '').trim().charAt(0).toUpperCase();
+        const charPaterno = (apellido_paterno || '').trim().charAt(0).toUpperCase();
+        const charMaterno = (apellido_materno || '').trim().charAt(0).toUpperCase();
+        codigoAGuardar = `${ci_estudiante}${charNombre}${charPaterno}${charMaterno}`;
+      }
+
+      const [result] = await pool.query(`
+        INSERT INTO estudiantes (
+          codigo_estudiante, nombre, apellido_paterno, apellido_materno, ci_estudiante,
+          fecha_nacimiento, lugar_nacimiento, genero, direccion,
+          nombre_padre, apellido_padre, ci_padre, tipo_ci_padre, extension_ci_padre, profesion_padre, lugar_trabajo_padre,
+          telefono_domicilio_padre, telefono_oficina_padre,
+          nombre_madre, apellido_madre, ci_madre, tipo_ci_madre, extension_ci_madre, profesion_madre, lugar_trabajo_madre,
+          telefono_domicilio_madre, telefono_oficina_madre,
+          nombre_autorizado1, telefono_autorizado1,
+          nombre_autorizado2, telefono_autorizado2,
+          alergias, estado_id, vacunas, seguro_medico
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          codigoAGuardar, nombre, apellido_paterno, apellido_materno, ci_estudiante,
+          fecha_nacimiento, lugar_nacimiento, generoMapeado, direccion,
+          nombre_padre, apellido_padre, ci_padre, tipo_ci_padre || 'ci', extension_ci_padre || null, profesion_padre, lugar_trabajo_padre,
+          telefono_domicilio_padre, telefono_oficina_padre,
+          nombre_madre, apellido_madre, ci_madre, tipo_ci_madre || 'ci', extension_ci_madre || null, profesion_madre, lugar_trabajo_madre,
+          telefono_domicilio_madre, telefono_oficina_madre,
+          nombre_autorizado1, telefono_autorizado1,
+          nombre_autorizado2, telefono_autorizado2,
+          alergias, 1, vacunas, seguro_medico
+        ]
+      );
+
+      const estudianteId = result.insertId;
+
+      // Guardar contactos WhatsApp
+      try {
+        await guardarContactosWhatsApp(
+          estudianteId,
+          {
+            telefono_domicilio_padre,
+            telefono_oficina_padre,
+            telefono_domicilio_madre,
+            telefono_oficina_madre,
+            whatsapp_domicilio_padre: !!whatsapp_domicilio_padre,
+            whatsapp_oficina_padre: !!whatsapp_oficina_padre,
+            whatsapp_domicilio_madre: !!whatsapp_domicilio_madre,
+            whatsapp_oficina_madre: !!whatsapp_oficina_madre,
+          },
+          {
+            nombre_padre,
+            apellido_padre,
+            nombre_madre,
+            apellido_madre,
+          }
+        );
+
+        // Enviar notificación de confirmación
+        const whatsappService = obtenerInstancia();
+        if (await whatsappService?.isClientReady()) {
+          const apellidoMatStr = apellido_materno ? ` ${apellido_materno}` : '';
+          const mensajeWhatsApp = `✅ *CONFIRMACIÓN DE REGISTRO EXITOSO*\n\n` +
+            `Estimado(a) tutor(a),\n\n` +
+            `El registro de su hijo(a) *${nombre} ${apellido_paterno}${apellidoMatStr}* ha sido procesado correctamente.\n\n` +
+            `Para completar la inscripción, debe llevar a la institución los siguientes requisitos:\n\n` +
+            `🔹 Fotocopia de carnet de identidad del estudiante.\n` +
+            `🔹 Fotocopia de carnet de identidad de los padres o tutores.\n` +
+            `🔹 Certificado de nacimiento original.\n` +
+            `🔹 Libreta escolar o boletín de calificaciones.\n` +
+            `🔹 Certificado de vacunas (según corresponda).\n\n` +
+            `*Código de Estudiante asignado:* ${codigoAGuardar}\n\n` +
+            `Por favor, acérquese a administración con esta documentación a la brevedad posible. Gracias.`;
+
+          const numerosWhatsApp = new Set();
+          
+          if (whatsapp_domicilio_padre && telefono_domicilio_padre) numerosWhatsApp.add(telefono_domicilio_padre);
+          if (whatsapp_oficina_padre && telefono_oficina_padre) numerosWhatsApp.add(telefono_oficina_padre);
+          if (whatsapp_domicilio_madre && telefono_domicilio_madre) numerosWhatsApp.add(telefono_domicilio_madre);
+          if (whatsapp_oficina_madre && telefono_oficina_madre) numerosWhatsApp.add(telefono_oficina_madre);
+
+          for (let num of numerosWhatsApp) {
+            num = String(num).replace(/\\D/g, '');
+            if (num.length >= 7) {
+              const numNormalizado = whatsappService.normalizarNumero ? whatsappService.normalizarNumero(num) : (num.length <= 8 ? '591' + num : num) + '@c.us';
+              if (whatsappService.client) {
+                await whatsappService.client.sendMessage(numNormalizado, mensajeWhatsApp).catch(e => {
+                  console.error('Error enviando mensaje WhatsApp (registro público):', e.message);
+                });
+                console.log(`✅ WhatsApp de confirmación enviado a ${numNormalizado}`);
+              }
+            }
+          }
+        }
+      } catch (waError) {
+        console.error('⚠️ Error procesando WhatsApp en REGISTRO PUBLICO:', waError);
+      }
+
+      res.status(201).json({
+        ok: true,
+        message: 'Estudiante registrado exitosamente',
+        data: { id: estudianteId, codigo_estudiante: codigoAGuardar }
+      });
+    } catch (error) {
+      console.error('Error en registro público:', error);
+      res.status(500).json({
+        ok: false,
+        message: 'Error al registrar al estudiante',
+        error: error.message
+      });
+    }
+  });
+
+  // Crear nuevo estudiante (Admin)
   app.post('/api/estudiantes', authMiddleware, async (req, res) => {
     try {
       console.log('Datos recibidos en el backend:', req.body);
@@ -593,7 +752,7 @@ function configurarRutasEstudiantes(app, pool, authMiddleware) {
       } = req.body;
 
       // Mapear género de M/F a masculino/femenino
-      const generoMapeado = genero === 'M' ? 'masculino' : genero === 'F' ? 'femenino' : genero;
+      const generoMapeado = genero === 'M' ? 'masculino' : genero === 'F' ? 'femenino' : (genero || null);
 
       // Validaciones básicas
       if (!nombre || !ci_estudiante || !fecha_nacimiento) {
@@ -804,7 +963,7 @@ function configurarRutasEstudiantes(app, pool, authMiddleware) {
 
       // Actualizar datos del estudiante
       // Mapear género de M/F a masculino/femenino si es necesario
-      const generoMapeado = genero === 'M' ? 'masculino' : genero === 'F' ? 'femenino' : genero;
+      const generoMapeado = genero === 'M' ? 'masculino' : genero === 'F' ? 'femenino' : (genero || null);
 
       // Asegurar que los valores requeridos no sean undefined
       const updateData = [

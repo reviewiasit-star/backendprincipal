@@ -2016,7 +2016,7 @@ INSTRUCCIONES CRÍTICAS:
 - Si necesitas unir tablas, usa las relaciones (Foreign Keys) indicadas en el esquema.
 - Para fechas actuales, usa funciones MySQL: YEAR(CURDATE()), MONTH(CURDATE()), CURDATE().
 - Si pregunta por meses, usa la columna 'mes' (1-12) o 'nombre_mes' según corresponda.
-- Para conteos, usa COUNT(*). Para sumas, usa SUM(columna).
+- Para conteos, usa COUNT(*). Para sumas, usa SUM(columna). CRÍTICO: Si agrupas datos con GROUP BY, SIEMPRE incluye en el SELECT las columnas de agrupación (ej. nombre_mes, nombre) para que el resultado tenga sentido. Nunca devuelvas un COUNT() aislado si agrupaste.
 - Si la pregunta dice 'este año', usa WHERE gestion_academica = YEAR(CURDATE()) o WHERE anio = YEAR(CURDATE()).
 - Si la pregunta dice 'este mes', usa WHERE YEAR(fecha) = YEAR(CURDATE()) AND MONTH(fecha) = MONTH(CURDATE()).
 - Si pregunta "cuáles pagó" o "cuáles le falta", muestra los meses con su estado y monto.
@@ -2304,13 +2304,16 @@ SQL:`;
       const preguntaNormalizadaVencidas = normalizarTextoComparacion(
         pregunta || "",
       );
+      // Si pide explícitamente deuda global, no limitamos a vencidas (el usuario quiere ver todo el panorama)
+      const mencionaDeudaGlobal = /(deuda|deudita|total|todo lo que debo|todo lo que falta|toda mi deuda)/i.test(preguntaNormalizadaVencidas);
+
       const esConsultaVencidas =
-        /(vencid[oa]s?|atrasad[oa]s?|en mora|moros[oa]s?)/i.test(
+        /(vencid[oa]s?|atrasad[oa]s?|atrazad[oa]s?|en mora|moros[oa]s?)/i.test(
           preguntaNormalizadaVencidas,
         ) &&
         /(detalle|detalles|mostrar|muestr|cual|cuales|ver|cuota|cuotas|pago|pagos)/i.test(
           preguntaNormalizadaVencidas,
-        );
+        ) && !mencionaDeudaGlobal;
 
       if (esConsultaVencidas && estudiantesRelacionados.length > 0) {
         const usarVariosHijosVencidas =
@@ -2376,10 +2379,44 @@ SQL:`;
       } catch (sqlError) {
         console.error("❌ Error SQL generado:", sqlGenerado);
         console.error("❌ Error SQL:", sqlError.message);
-        // Si hay error SQL, intentar responder desde el reglamento como fallback
-        throw new Error(
-          `Error en la consulta: ${sqlError.message}. Por favor, reformula tu pregunta de manera más específica.`,
-        );
+
+        // Si falló el SQL generado por Gemini y es una consulta de pagos, usar SQL de respaldo
+        const preguntaLowerFallback = String(pregunta || "").toLowerCase();
+        const mencionaPagosFallback =
+          preguntaLowerFallback.includes("cuota") ||
+          preguntaLowerFallback.includes("mensualidad") ||
+          preguntaLowerFallback.includes("pago") ||
+          preguntaLowerFallback.includes("vencimiento") ||
+          preguntaLowerFallback.includes("cuanto debo") ||
+          preguntaLowerFallback.includes("cuánto debo") ||
+          preguntaLowerFallback.includes("debo del mes") ||
+          preguntaLowerFallback.includes("debo de") ||
+          preguntaLowerFallback.includes("cuanto debe") ||
+          preguntaLowerFallback.includes("cuánto debe") ||
+          preguntaLowerFallback.includes("falta pagar");
+
+        if (estudiantesRelacionados.length > 0 && mencionaPagosFallback) {
+          console.log("🔄 Intentando SQL de respaldo tras error de SQL de Gemini...");
+          const idsEstudiantes = estudiantesRelacionados.map((e) => e.id).join(", ");
+          const usarVariosHijos = estudiantesRelacionados.length > 1 && (nombresHijosMencionados.length >= 1 || preguntaPorTodosLosHijos);
+          const estudianteIdUnico = estudiantesRelacionados.length > 0 ? estudiantesRelacionados[0].id : null;
+          const whereEstudiantes = usarVariosHijos ? `ce.id_estudiante IN (${idsEstudiantes})` : `ce.id_estudiante = ${estudianteIdUnico}`;
+          
+          const sqlRespaldo = `SELECT pm.nombre_mes, pm.fecha_vencimiento, pm.monto_esperado, COALESCE(SUM(pr.monto), 0) as monto_pagado, (pm.monto_esperado - COALESCE(SUM(pr.monto), 0)) as monto_pendiente, pm.estado, ce.id_estudiante FROM pagos_mensuales pm JOIN compromiso_economico ce ON pm.id_compromiso = ce.id LEFT JOIN pagos_realizados pr ON pr.id_compromiso = ce.id AND pr.mes = pm.nombre_mes WHERE ${whereEstudiantes} GROUP BY pm.id, pm.nombre_mes, pm.fecha_vencimiento, pm.monto_esperado, pm.estado, ce.id_estudiante ORDER BY ce.id_estudiante, pm.nombre_mes`;
+          
+          try {
+            [resultados] = await this.pool.query(sqlRespaldo);
+            console.log(`✅ SQL de respaldo ejecutado exitosamente. Resultados: ${resultados.length}`);
+          } catch (respaldoError) {
+            console.error("❌ Error en SQL de respaldo:", respaldoError.message);
+            throw new Error(`Error en la consulta: ${sqlError.message}. Por favor, reformula tu pregunta de manera más específica.`);
+          }
+        } else {
+          // Si hay error SQL y no es de pagos, intentar responder desde el reglamento como fallback
+          throw new Error(
+            `Error en la consulta: ${sqlError.message}. Por favor, reformula tu pregunta de manera más específica.`,
+          );
+        }
       }
 
       if (!resultados || resultados.length === 0) {
@@ -2598,7 +2635,20 @@ SQL:`;
           }
         }
 
-        const valor = Object.values(resultados[0])[0];
+        let valor = Object.values(resultados[0])[0];
+        
+        // Mejorar presentación de sumas y montos totales
+        if (typeof valor === 'number' || (typeof valor === 'string' && !isNaN(parseFloat(valor)) && valor.includes("."))) {
+            const numValor = parseFloat(valor).toFixed(2);
+            if (preguntaLowerSimple.includes("cuanto") || preguntaLowerSimple.includes("cuánto") || preguntaLowerSimple.includes("debo") || preguntaLowerSimple.includes("deuda") || preguntaLowerSimple.includes("falta") || preguntaLowerSimple.includes("pagar")) {
+                if (preguntaLowerSimple.includes("deuda") || preguntaLowerSimple.includes("falta") || preguntaLowerSimple.includes("debo") || preguntaLowerSimple.includes("atrasad") || preguntaLowerSimple.includes("atrazad") || preguntaLowerSimple.includes("vencid")) {
+                    return `El saldo total pendiente (monto adeudado) es de **Bs. ${numValor}**.\n\n_Nota: Si deseas ver el desglose mes a mes, por favor pregúntame "mostrar el detalle de mi deuda"._`;
+                }
+                return `El monto total es de **Bs. ${numValor}**.`;
+            }
+            return `**Bs. ${numValor}**`;
+        }
+        
         return `**${valor}**`;
       }
 
@@ -3294,6 +3344,24 @@ SQL:`;
         }
 
         return respuesta.trim();
+      }
+
+      // Mejora: Detectar si es un resultado de agregación (COUNT, SUM)
+      if (resultados.length > 0) {
+        const firstRowKeys = Object.keys(resultados[0]);
+        const isAggregate = firstRowKeys.length === 1 && (firstRowKeys[0].toUpperCase().includes('COUNT') || firstRowKeys[0].toUpperCase().includes('SUM'));
+        if (isAggregate) {
+           let sum = 0;
+           for (const row of resultados) {
+             const val = parseFloat(row[firstRowKeys[0]]);
+             if (!isNaN(val)) sum += val;
+           }
+           if (resultados.length === 1) {
+             return `El resultado de tu consulta es: **${sum}**.`;
+           } else {
+             return `El resultado de tu consulta suma un total de: **${sum}** cuotas/registros pendientes.`;
+           }
+        }
       }
 
       // Formato genérico para otros tipos de resultados
@@ -4087,9 +4155,15 @@ IMPORTANTE: LEE el CONTEXTO y responde con la INFORMACIÓN directamente. NO menc
       const articulosMencionados = (
         respuestaTrim.match(/Art[íi]culo\s*\d+|Art\.\s*\d+/gi) || []
       ).length;
+      const esMensajeInterno =
+        preguntaLower.includes("analiza el siguiente comando de notific") ||
+        preguntaLower.includes("responde unicamente con un objeto json") ||
+        preguntaLower.includes("responde únicamente con un objeto json");
       const pareceIncompleta =
-        !respuestaTrim.match(/[.!?]$/) ||
-        (esBecasLista && articulosMencionados < 6);
+        !esMensajeInterno && (
+          !respuestaTrim.match(/[.!?]$/) ||
+          (esBecasLista && articulosMencionados < 6)
+        );
 
       if (pareceIncompleta && respuestaTrim.length > 100) {
         console.warn(
@@ -4281,7 +4355,7 @@ function normalizarTextoComparacionConMeses(s) {
 function determinarLongitudRespuesta(pregunta, tipoConsulta) {
   const preguntaLower = pregunta.toLowerCase();
   const esConsultaPago =
-    /(pagar|pago|pagos|debo|deuda|pendiente|cuota|mensualidad|vence|vencimiento)/i.test(
+    /(pagar|pagad|pagu[eé]|pago|pagos|debo|deuda|pendiente|cuota|mensualidad|vence|vencimiento)/i.test(
       preguntaLower,
     );
 
@@ -4313,9 +4387,9 @@ function determinarLongitudRespuesta(pregunta, tipoConsulta) {
   // Override: checklist breve salvo que pidan detalle explícito
   if (tipoConsulta === "reglamento" && esRequisitosInscripcion && !pidioDetalle)
     return "corta";
-  // CRÍTICO: consultas de pagos (base de datos) no deben recortarse a "respuesta corta",
-  // porque se pierde justo el detalle de monto/vencimiento.
-  if (tipoConsulta === "base_datos" && esConsultaPago) return "normal";
+  // CRÍTICO: Ninguna consulta de base de datos debe recortarse a "respuesta corta",
+  // ya que los formatos como el de pagos usan saltos de línea (\n\n) que serían eliminados.
+  if (tipoConsulta === "base_datos") return "normal";
 
   if (requiereCorta) return "corta";
   if (requiereDetallada) return "detallada";
@@ -4786,17 +4860,30 @@ function extraerMensaje(pregunta) {
   const matchComillas = pregunta.match(/["'](.+?)["']/);
   if (matchComillas) return matchComillas[1];
 
-  const matchQue = pregunta.match(
-    /que\s+(.+?)\s+(?:a\s+todos|para|del?|en|primer|segundo|tercer)/i,
-  );
-  if (matchQue) return matchQue[1];
+  // Identificar destinatarios para recortar a partir de ahí
+  const patronTarget = /(a\s+todos|todos\s+los\s+niveles|toda\s+la\s+unidad|todos\s+los\s+padres|general|primer\s+nivel|segundo\s+nivel|tercer\s+nivel|cuarto\s+nivel|quinto\s+nivel|sexto\s+nivel|primer\s+grado|segundo\s+grado|tercer\s+grado|cuarto\s+grado|quinto\s+grado|sexto\s+grado|primero\s+nivel|segundo\s+nivel|tercero\s+nivel|cuarto\s+nivel|quinto\s+nivel|sexto\s+nivel|primero\s+grado|segundo\s+grado|tercero\s+grado|cuarto\s+grado|quinto\s+grado|sexto\s+grado)/i;
+  const matchTarget = pregunta.match(patronTarget);
 
-  const matchMensaje = pregunta.match(
-    /mensaje\s+(.+?)\s+(?:a\s+todos|para|del?|primer|segundo|tercer)/i,
-  );
-  if (matchMensaje) return matchMensaje[1];
+  if (matchTarget) {
+    const idx = pregunta.indexOf(matchTarget[0]) + matchTarget[0].length;
+    let mensajeRestante = pregunta.substring(idx).trim();
+    // Limpiar conectores iniciales comunes
+    mensajeRestante = mensajeRestante
+      .replace(/^(que|de|en|para|:|,\s*que)\s+/i, "")
+      .trim();
+    if (mensajeRestante.length >= 5) {
+      return mensajeRestante;
+    }
+  }
 
-  return null;
+  // Fallback si no hay destinatario claro o quedó muy corto
+  let limpio = pregunta
+    .replace(/^(envía|envia|envíe|enviar|manda|mandar|avisa|avisar|notifica|notificar|comunica|comunicar)\s+/i, "")
+    .replace(/^(mensaje|comunicado|aviso)\s+/i, "")
+    .replace(/^(a\s+todos|todos\s+los\s+niveles|todos\s+los\s+padres|a\s+los\s+padres|a\s+los\s+de\s+|que\s+los\s+de\s+)\s+/i, "")
+    .replace(/^(que|:)\s+/i, "");
+  
+  return limpio.trim();
 }
 
 /**
@@ -4876,11 +4963,11 @@ async function obtenerPadresPorNivel(niveles, pool) {
           ca.tipo_contacto,
           n.nombre as nivel_nombre
         FROM estudiantes e
-        INNER JOIN inscripciones i ON e.id = i.id_estudiante
-        INNER JOIN nivel n ON i.id_nivel = n.id
+        INNER JOIN inscripciones i ON e.id = i.estudiante_id
+        INNER JOIN nivel n ON i.nivel_id = n.id
         INNER JOIN contacto_aviso ca ON e.id = ca.estudiante_id
-        WHERE i.gestion = ?
-          AND i.activo = TRUE
+        WHERE i.gestion_academica = ?
+          AND i.estado = 'activo'
           AND ca.activo = TRUE
         ORDER BY n.nombre, e.apellido_paterno, e.nombre
       `;
@@ -4899,12 +4986,12 @@ async function obtenerPadresPorNivel(niveles, pool) {
           ca.tipo_contacto,
           n.nombre as nivel_nombre
         FROM estudiantes e
-        INNER JOIN inscripciones i ON e.id = i.id_estudiante
-        INNER JOIN nivel n ON i.id_nivel = n.id
+        INNER JOIN inscripciones i ON e.id = i.estudiante_id
+        INNER JOIN nivel n ON i.nivel_id = n.id
         INNER JOIN contacto_aviso ca ON e.id = ca.estudiante_id
         WHERE (${placeholders})
-          AND i.gestion = ?
-          AND i.activo = TRUE
+          AND i.gestion_academica = ?
+          AND i.estado = 'activo'
           AND ca.activo = TRUE
         ORDER BY n.nombre, e.apellido_paterno, e.nombre
       `;
@@ -4980,6 +5067,17 @@ function normalizarMesesEnPregunta(pregunta) {
 function clasificarConsulta(pregunta, infoRemitente = null) {
   const preguntaLower = pregunta.toLowerCase().trim();
 
+  // ===== FILTRO DE PROMPTS INTERNOS =====
+  const esMensajeInterno =
+    preguntaLower.includes("analiza el siguiente comando de notific") ||
+    preguntaLower.includes("responde unicamente con un objeto json") ||
+    preguntaLower.includes("responde únicamente con un objeto json");
+
+  if (esMensajeInterno) {
+    console.log("🔍 [clasificarConsulta] Detectado prompt interno de extracción. Clasificando como reglamento para procesamiento con LLM.");
+    return { tipo: "reglamento", herramienta: "reglamento", confianza: 0.99 };
+  }
+
   // ===== PAGOS PERSONALES (Prioridad ABSOLUTA - DEBE ir PRIMERO) =====
   // CRÍTICO: Esta verificación debe ir ANTES de TODO para padres/tutores
   // Si hay infoRemitente y menciona pagos/meses/hijos, es SIEMPRE base_datos
@@ -4989,7 +5087,7 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
     );
 
     // Detectar patrones de pagos con máxima prioridad
-    const mencionaDebo = /(cuánto|cuanto|cuándo|cuando).*debo/i.test(pregunta);
+    const mencionaDebo = /(cuánto|cuanto|cuándo|cuando|cuáles|cuales|cuántas|cuantas|cuántos|cuantos).*(debo|falta|adeuda|adeudado|pagar|deuda)/i.test(pregunta);
     const mencionaMesEspecifico =
       /(febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i.test(
         pregunta,
@@ -4998,7 +5096,7 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
       /(mi hija|mi hijo|mis hijos|mis hijas|de mi hija|de mi hijo|de mis hijos|de mis hijas|mi estudiante|mis estudiantes|mi niño|mi niña|mis niños|mis niñas)/i.test(
         pregunta,
       );
-    const mencionaPagos = /(pago|cuota|mensualidad|debo|deuda)/i.test(pregunta);
+    const mencionaPagos = /(pago|cuota|mensualidad|debo|deuda|adeudad|adeuda|falta\s+pagar)/i.test(pregunta);
     const mencionaVencidas =
       /(vencid[oa]s?|atrasad[oa]s?|en\s+mora|moros[oa]s?)/i.test(pregunta);
     const pideDetalleVencidas =
@@ -5121,7 +5219,7 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
   // ===== DETECTAR COMANDOS DE ENVÍO MASIVO =====
   // CRÍTICO: Debe ir ANTES de notificaciones genéricas
   const patronEnvioMasivo =
-    /(envía|envia|envíe|enviar|manda|mandar).*mensaje.*a.*(todos|padres|tutores|nivel)/i;
+    /(envía|envia|envíe|enviar|manda|mandar|avisa|avisar|notifica|notificar|comunica|comunicar)\s+(?:un\s+|un\s+nuevo\s+|el\s+)?(?:mensaje|comunicado|aviso|que\s+los\s+de\s+|a\s+todos|a\s+los|a\s+primer|a\s+segundo|a\s+tercer)/i;
   const esEnvioMasivo = patronEnvioMasivo.test(pregunta);
 
   if (esEnvioMasivo) {
@@ -5251,7 +5349,7 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
         pregunta,
       );
     const mencionaCuotaOMensualidad =
-      /(cuota|cuotas|mensualidad|mensualidades|pago|pagos|deuda|deudas|pendiente|pendientes)/i.test(
+      /(cuota|cuotas|mensualidad|mensualidades|pago|pagos|deuda|deudas|adeudad|adeudado|pendiente|pendientes|falta\s+pagar)/i.test(
         pregunta,
       );
     const mencionaVencimiento =
@@ -5263,7 +5361,7 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
         pregunta,
       );
     // CRÍTICO: Detectar "cuanto debo" permitiendo palabras entre "cuanto" y "debo"
-    const mencionaDebo = /(cuánto|cuanto|cuándo|cuando).*debo/i.test(pregunta);
+    const mencionaDebo = /(cuánto|cuanto|cuándo|cuando|cuáles|cuales|cuántas|cuantas|cuántos|cuantos).*(debo|falta|adeuda|adeudado|pagar|deuda)/i.test(pregunta);
 
     console.log(`  [clasificarConsulta] - mencionaDebo: ${mencionaDebo}`);
     console.log(
@@ -5435,6 +5533,8 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
       // Qué debo
       "qué debo",
       "que debo",
+      "cuáles debo",
+      "cuales debo",
       "qué debo pagar",
       "que debo pagar",
       "qué me falta",
@@ -5688,8 +5788,10 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
     // Sistema y usuarios
     "usuarios del sistema",
     "estudiantes inscritos",
+    "estudiantes inscriptos", // Sinónimo corregido
     "total de",
     "total inscritos",
+    "total inscriptos", // Sinónimo corregido
     "cuántos usuarios",
     "cuantos usuarios",
     "roles",
@@ -5724,6 +5826,8 @@ function clasificarConsulta(pregunta, infoRemitente = null) {
     "total recaudado",
     // Inscripciones y gestión
     "inscritos",
+    "inscriptos", // Sinónimo corregido
+    "inscripto", // Sinónimo corregido
     "inscripciones del",
     "inscripciones de",
     "matriculados",
@@ -6214,9 +6318,35 @@ async function ejecutarAgente(
 ) {
   const inicio = Date.now();
 
+  // ===== NORMALIZACIÓN Y CORRECCIÓN ORTOGRÁFICA (Tolerancia a errores de padres) =====
+  if (typeof pregunta === 'string') {
+    pregunta = pregunta
+      .replace(/\bnobiembre\b/gi, "noviembre")
+      .replace(/\bnovimbre\b/gi, "noviembre")
+      .replace(/\bnovenbre\b/gi, "noviembre")
+      .replace(/\bnobembre\b/gi, "noviembre")
+      .replace(/\bmarso\b/gi, "marzo")
+      .replace(/\babrl\b/gi, "abril")
+      .replace(/\bavril\b/gi, "abril")
+      .replace(/\bfevrero\b/gi, "febrero")
+      .replace(/\bfebrro\b/gi, "febrero")
+      .replace(/\bsetiembre\b/gi, "septiembre")
+      .replace(/\botubre\b/gi, "octubre")
+      .replace(/\bdisiembre\b/gi, "diciembre")
+      .replace(/\bdisembre\b/gi, "diciembre")
+      .replace(/\benro\b/gi, "enero")
+      .replace(/\bagoto\b/gi, "agosto")
+      .replace(/\binscriptos\b/gi, "inscritos")
+      .replace(/\binscripto\b/gi, "inscrito")
+      // Correcciones de verbos y palabras de pago comunes
+      .replace(/\bdbo\b/gi, "debo")
+      .replace(/\bcunto\b/gi, "cuanto")
+      .replace(/\bdeve\b/gi, "debe");
+  }
+
   // ===== DETECCIÓN DE MÚLTIPLES PREGUNTAS =====
   console.log(`\n🚀 [ejecutarAgente] ========== NUEVA CONSULTA ==========`);
-  console.log(`🚀 [ejecutarAgente] Pregunta recibida: "${pregunta}"`);
+  console.log(`🚀 [ejecutarAgente] Pregunta recibida (corregida): "${pregunta}"`);
 
   // ===== 🆕 CARGAR MEMORIAS ACTIVAS (avisos del admin al agente) =====
   let contextoMemoriaInstitucional = "";
@@ -6251,6 +6381,8 @@ async function ejecutarAgente(
   const esSolicitudPDF =
     infoUsuario &&
     ["Administrador", "Director", "Secretaria"].includes(infoUsuario.rol) &&
+    !preguntaLowerPDF.includes("analiza el siguiente comando de notific") &&
+    !preguntaLowerPDF.includes("responde únicamente con un objeto json") &&
     /reporte|listado|lista|informe|pdf|generar.*lista|dame.*lista|puedes.*lista|exportar|imprimir/.test(
       preguntaLowerPDF,
     ) &&
@@ -6327,6 +6459,11 @@ async function ejecutarAgente(
   // - "dame la lista de contactos de madres/tutores"
   try {
     const preguntaPriv = normalizarTextoComparacion(pregunta);
+    const esMensajeInterno =
+      preguntaPriv.includes("analiza el siguiente comando de notific") ||
+      preguntaPriv.includes("responde unicamente con un objeto json") ||
+      preguntaPriv.includes("responde únicamente con un objeto json");
+
     const pideListadoMasivo =
       /(todos|todas|lista|listado|base de datos|exportar|descargar)/i.test(
         preguntaPriv,
@@ -6340,7 +6477,7 @@ async function ejecutarAgente(
         preguntaPriv,
       );
 
-    if (pideListadoMasivo && pideContactoSensible && objetivoFamilias) {
+    if (!esMensajeInterno && pideListadoMasivo && pideContactoSensible && objetivoFamilias) {
       const tiempo = Date.now() - inicio;
       return {
         respuesta:
@@ -6914,4 +7051,8 @@ module.exports = {
   // calcula embeddings para cada chunk y los guarda en la base de datos.
   // Retorna el número de chunks y embeddings creados.
   procesarYGuardarChunksEmbeddings,
+
+  // Métodos de envío masivo exportados para administración
+  extraerParametrosEnvioMasivo,
+  extraerMensaje,
 };

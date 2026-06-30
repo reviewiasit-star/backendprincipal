@@ -7,25 +7,33 @@ const { authMiddleware } = require('../../middleware/auth');
 const router = express.Router();
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'pdfs');
-try {
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+const LOGOS_DIR = path.join(process.cwd(), 'uploads', 'logos');
+
+[UPLOADS_DIR, LOGOS_DIR].forEach(dir => {
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (e) {
+    // Si no se puede crear, el endpoint fallará más adelante con mensaje claro.
   }
-} catch (e) {
-  // Si no se puede crear, el endpoint fallará más adelante con mensaje claro.
-}
+});
 
 const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    cb(null, UPLOADS_DIR);
+  destination: function (_req, file, cb) {
+    if (file.fieldname === 'logo') {
+      cb(null, LOGOS_DIR);
+    } else {
+      cb(null, UPLOADS_DIR);
+    }
   },
   filename: function (_req, file, cb) {
-    const safeOriginal = String(file.originalname || 'archivo.pdf')
+    const safeOriginal = String(file.originalname || 'archivo')
       .replace(/[^\w.\-() ]+/g, '_')
       .replace(/\s+/g, '_')
       .slice(0, 120);
 
-    const ext = path.extname(safeOriginal).toLowerCase() || '.pdf';
+    const ext = path.extname(safeOriginal).toLowerCase() || '.png';
     const base = path.basename(safeOriginal, ext) || 'archivo';
     const name = `${base}_${Date.now()}${ext}`;
     cb(null, name);
@@ -38,10 +46,15 @@ const upload = multer({
     fileSize: 15 * 1024 * 1024 // 15MB
   },
   fileFilter: function (_req, file, cb) {
-    const isPdf =
-      file.mimetype === 'application/pdf' ||
-      String(file.originalname || '').toLowerCase().endsWith('.pdf');
-    if (!isPdf) return cb(new Error('Solo se permite subir archivos PDF'));
+    if (file.fieldname === 'logo') {
+      const isImage = file.mimetype.startsWith('image/jpeg') || file.mimetype.startsWith('image/png');
+      if (!isImage) return cb(new Error('Solo se permiten imágenes JPG o PNG'));
+    } else {
+      const isPdf =
+        file.mimetype === 'application/pdf' ||
+        String(file.originalname || '').toLowerCase().endsWith('.pdf');
+      if (!isPdf) return cb(new Error('Solo se permite subir archivos PDF'));
+    }
     cb(null, true);
   }
 });
@@ -68,5 +81,24 @@ router.post('/upload-pdf', authMiddleware, upload.single('pdf'), async (req, res
   }
 });
 
-module.exports = router;
+// Subir un logo para bloques
+router.post('/upload-logo', authMiddleware, upload.single('logo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No se recibió el archivo de imagen' });
+    }
 
+    const relativePath = path.posix.join('uploads', 'logos', req.file.filename);
+
+    return res.json({
+      success: true,
+      filePath: relativePath,
+      filename: req.file.filename
+    });
+  } catch (error) {
+    console.error('Error en /api/upload/upload-logo:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Error al subir logo' });
+  }
+});
+
+module.exports = router;
