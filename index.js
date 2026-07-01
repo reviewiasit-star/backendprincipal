@@ -30,7 +30,29 @@ const comprobantesRoutes = require("./microservices/pagos/comprobantesRoutes");
 const { configurarRutasEstudiantesCajas } = require("./microservices/academia/estudiantesCajas");
 
 const app = express();
-app.use(cors());
+
+// --- Configuración de CORS ---
+const { getPublicFrontendUrl } = require("./microservices/academia/appConfig");
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3001",
+  "https://frontue-production.up.railway.app",
+  getPublicFrontendUrl(),
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir peticiones sin origin (ej: Postman, herramientas de backend)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS bloqueado para: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 // Servir imágenes de productos de tienda
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Aumentar límite de tamaño para JSON y URL-encoded (50MB)
