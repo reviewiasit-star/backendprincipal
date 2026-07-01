@@ -31,29 +31,31 @@ const { configurarRutasEstudiantesCajas } = require("./microservices/academia/es
 
 const app = express();
 
-// --- Configuración de CORS ---
-const { getPublicFrontendUrl } = require("./microservices/academia/appConfig");
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3001",
-  "https://frontue-production.up.railway.app",
-  getPublicFrontendUrl(),
-].filter(Boolean);
+// --- Configuración de CORS robusta ---
+// Interceptar TODO antes, incluyendo OPTIONS (preflight)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowed = [
+    "http://localhost:5173",
+    "http://localhost:3001",
+    "https://frontue-production.up.railway.app",
+    process.env.PUBLIC_FRONTEND_URL,
+  ].filter(Boolean);
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir peticiones sin origin (ej: Postman, herramientas de backend)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    callback(new Error(`CORS bloqueado para: ${origin}`));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-// Servir imágenes de productos de tienda
+  if (!origin || allowed.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+  // Responder inmediatamente a las peticiones preflight OPTIONS
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Aumentar límite de tamaño para JSON y URL-encoded (50MB)
 // Importante: NO intentar parsear multipart/form-data como JSON o URL-encoded
