@@ -31,31 +31,22 @@ const { configurarRutasEstudiantesCajas } = require("./microservices/academia/es
 
 const app = express();
 
-// --- Configuración de CORS robusta ---
-// Interceptar TODO antes, incluyendo OPTIONS (preflight)
+// --- CORS definitivo: refleja el origen de la petición ---
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowed = [
-    "http://localhost:5173",
-    "http://localhost:3001",
-    "https://frontue-production.up.railway.app",
-    process.env.PUBLIC_FRONTEND_URL,
-  ].filter(Boolean);
-
-  if (!origin || allowed.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin || "*");
-  }
+  // Si viene con origin, lo reflejamos; si no (ej: Postman), permitimos todo
+  res.setHeader("Access-Control-Allow-Origin", origin || "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-
-  // Responder inmediatamente a las peticiones preflight OPTIONS
+  res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,POST,PUT,DELETE,PATCH,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With");
+  // Responder inmediatamente a preflight OPTIONS
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.status(200).end();
   }
   next();
 });
 
+// Servir imágenes/uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Aumentar límite de tamaño para JSON y URL-encoded (50MB)
 // Importante: NO intentar parsear multipart/form-data como JSON o URL-encoded
