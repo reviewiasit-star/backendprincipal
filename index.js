@@ -152,6 +152,16 @@ configurarRutasCompromisoEconomico(app, pool, authMiddleware);
 const analisisAutonomoRoutes = require("./microservices/academia/analisisAutonomoRoutes");
 app.use("/api/analisis-autonomo", analisisAutonomoRoutes);
 
+// Ruta raíz - confirma que el backend está activo
+app.get("/", (req, res) => {
+  res.json({
+    ok: true,
+    message: "✅ Backend Unidad Educativa - Funcionando correctamente",
+    version: "1.0.0",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Endpoint para obtener becas
 app.get("/api/becas", authMiddleware, async (req, res) => {
   try {
